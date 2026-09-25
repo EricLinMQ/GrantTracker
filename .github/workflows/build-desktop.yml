@@ -1,8 +1,11 @@
 name: Build desktop apps
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 permissions:
-  contents: read
+  contents: write
 jobs:
   build:
     name: ${{ matrix.label }}
@@ -35,3 +38,28 @@ jobs:
           path: downloads/
           if-no-files-found: error
           retention-days: 30
+
+  publish:
+    name: Publish downloads
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release
+      - name: Collect release files
+        run: |
+          mkdir assets
+          find release -type f \( -name '*.zip' -o -name '*.sha256' \) -exec cp {} assets/ \;
+          find release -type f -name 'START-HERE.txt' -exec cp {} assets/ \; -quit
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="build-${GITHUB_RUN_NUMBER}"
+          gh release create "$tag" assets/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "CorriLee Grant Ranker build ${GITHUB_RUN_NUMBER}" \
+            --notes "Ready-to-use Windows and Mac downloads. Extract the ZIP for your computer, then follow START-HERE.txt. These builds are unsigned and not Apple-notarised." \
+            --latest
