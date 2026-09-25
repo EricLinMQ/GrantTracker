@@ -1,0 +1,37 @@
+name: Build desktop apps
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    name: ${{ matrix.label }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2022
+            label: Windows-x64
+          - os: macos-15-intel
+            label: Mac-Intel
+          - os: macos-15
+            label: Mac-Apple-Silicon
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install build dependencies
+        run: python -m pip install -r requirements-build.txt
+      - name: Run regression tests
+        run: python -m unittest discover -s . -v
+      - name: Build and test packaged app
+        run: python build.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CorriLee-${{ matrix.label }}
+          path: downloads/
+          if-no-files-found: error
+          retention-days: 30

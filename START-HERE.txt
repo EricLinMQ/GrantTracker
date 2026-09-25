@@ -1,0 +1,35 @@
+CORRILEE GRANT RANKER
+
+1. Download the app for your computer and extract the ZIP.
+   Windows: keep the whole extracted folder together, then open CorriLee Grant Ranker.exe.
+   Mac: open CorriLee Grant Ranker.app. You can move it into Applications.
+   Mac Apple Silicon is for M-series chips; Mac Intel is for Intel processors.
+2. Click Search grants. Keep the app open and connected to the internet.
+3. When it finishes, click Save Excel and choose a folder.
+4. Click Open saved file to open the report in your spreadsheet application.
+
+You do not need Python, GitHub, ChatGPT or a subscription to run the packaged app.
+Excel is not required to create the report, but you need a spreadsheet viewer to read it.
+
+Stop search keeps partial results after current web requests finish. The report records
+unread sources. A failed search is not proof that no grants exist.
+Closed rounds are kept on a separate worksheet, not in the current shortlist.
+Potential matches require checking full eligibility and current dates with the funder.
+
+The app searches 13 configured sources for regional Australia, with NSW prioritised.
+It does not upload your documents, submit grant applications or require an API key.
+Source websites may change; obtain updated versions from your maintainer when needed.
+
+INITIAL BUILD STATUS
+These builds are not signed with a verified software-publisher certificate or notarised
+by Apple. Windows/macOS may warn or block launch. Contact the maintainer for a signed
+release if blocked. Do not disable your computer's security protections.
+
+RANKING
+The app and Excel shortlist sort by screening score, with possible conflicts below
+other candidates. Scores measure relevant wording, not eligibility or likelihood
+of winning. Activities contribute up to 35 points, mission 30, regional focus 25,
+and applicant type 10. Repeated wording never increases a score.
+Open the Screening evidence worksheet for each contribution, its supporting
+excerpt and review flags. Zero means no supporting evidence found, not a confirmed
+mismatch. Check Source coverage for unread pages. No AI API or API key is used.

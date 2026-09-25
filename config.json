@@ -1,0 +1,115 @@
+{
+  "profile": {
+    "organisation": "The CorriLee Foundation",
+    "project": "Regional child sexual abuse awareness and community education through documentary screenings and facilitated discussion",
+    "scope": "Any regional town in Australia; mainly NSW",
+    "towns": [],
+    "dgr1": null,
+    "acnc_registered": null,
+    "has_abn": null,
+    "budget_aud": null,
+    "event_date": null,
+    "profile_notes": "The August-October 2026 project brief reports DGR1 status. Current registration, ABN, event dates, local partners and budget have not been independently verified. No contact details or survivor stories are needed by this script."
+  },
+  "sources": [
+    {
+      "name": "GrantConnect - federal grants",
+      "domains": ["grants.gov.au", "finance.gov.au"],
+      "urls": ["https://www.grants.gov.au/Go/List", "https://www.finance.gov.au/individuals/find-grant-grantconnect"],
+      "directory_urls": ["https://www.grants.gov.au/Go/List", "https://www.finance.gov.au/individuals/find-grant-grantconnect"],
+      "note": "Search current and forecast opportunities manually if the interactive portal is unreadable. Suggested terms: child sexual abuse, prevention, regional, community education, sexual violence."
+    },
+    {
+      "name": "NSW Government Grants Finder",
+      "domains": ["nsw.gov.au"],
+      "urls": ["https://www.nsw.gov.au/grants-and-funding"],
+      "directory_urls": ["https://www.nsw.gov.au/grants-and-funding"],
+      "region": "NSW",
+      "note": "Public linked listings only. Interactive filters and pagination are not exhaustively searched. Try Not-for-profit, Regional, Community, Education, Events, Youth and Health and wellbeing filters manually."
+    },
+    {
+      "name": "FRRR",
+      "domains": ["frrr.org.au"],
+      "urls": ["https://frrr.org.au/funding/src-small-vital/", "https://frrr.org.au/funding/find-funding-now/"],
+      "directory_urls": ["https://frrr.org.au/funding/find-funding-now/", "https://frrr.org.au/funding/"],
+      "note": "National rural/regional funding. Different rounds and streams can share one page; confirm the relevant round and project start date."
+    },
+    {
+      "name": "ClubGRANTS",
+      "domains": ["clubgrants.com.au"],
+      "urls": ["https://www.clubgrants.com.au/how-to-apply", "https://www.clubgrants.com.au/find-your-local-grant-round"],
+      "directory_urls": ["https://www.clubgrants.com.au/how-to-apply", "https://www.clubgrants.com.au/find-your-local-grant-round", "https://www.clubgrants.com.au/help/applicants"],
+      "region": "NSW local club catchment",
+      "note": "Local-round search may require a browser and town/club selection. Category 1 is the main community welfare lead; check local dates and benefits. No login is attempted."
+    },
+    {
+      "name": "Australian Communities Foundation",
+      "domains": ["communityfoundation.org.au"],
+      "urls": ["https://communityfoundation.org.au/grant-rounds/", "https://communityfoundation.org.au/not-for-profits/", "https://communityfoundation.org.au/not-for-profits/seeking-funding/"],
+      "directory_urls": ["https://communityfoundation.org.au/grant-rounds/", "https://communityfoundation.org.au/not-for-profits/", "https://communityfoundation.org.au/not-for-profits/seeking-funding/", "https://communityfoundation.org.au/funding-platform/"],
+      "note": "Open grant rounds and donor platform are different routes. Platform listing is not an awarded grant; ACNC/DGR1 requirements must be checked."
+    },
+    {
+      "name": "Funding Centre",
+      "public_directory_only": true,
+      "domains": ["fundingcentre.com.au"],
+      "urls": ["https://www.fundingcentre.com.au/"],
+      "directory_urls": ["https://www.fundingcentre.com.au/"],
+      "note": "Subscription grant database. This script reads only public pages; member-only search is NOT covered. Use your own subscription in a browser for complete database access."
+    },
+    {
+      "name": "Screen NSW",
+      "domains": ["screen.nsw.gov.au"],
+      "urls": ["https://www.screen.nsw.gov.au/funding-support/audience-development", "https://www.screen.nsw.gov.au/funding-support"],
+      "directory_urls": ["https://www.screen.nsw.gov.au/funding-support"],
+      "region": "NSW",
+      "note": "Screening/audience programs may require a film festival organisation or partner. Existing-film screenings are different from film production."
+    },
+    {
+      "name": "National Office for Child Safety",
+      "domains": ["childsafety.gov.au"],
+      "urls": ["https://www.childsafety.gov.au/news"],
+      "directory_urls": ["https://www.childsafety.gov.au/news"],
+      "note": "Announcements can describe old rounds or direct support services. Check the current GrantConnect guidelines before applying."
+    },
+    {
+      "name": "NSW council directory",
+      "domains": ["olg.nsw.gov.au"],
+      "urls": ["https://www.olg.nsw.gov.au/public/find-your-local-council"],
+      "directory_urls": ["https://www.olg.nsw.gov.au/public/find-your-local-council"],
+      "note": "A council directory, not a grant database. External council websites are not automatically all crawled. Add grant pages for other host councils to config.json. Four regional NSW councils are included below as a starting sample."
+    },
+    {
+      "name": "Wagga Wagga City Council",
+      "domains": ["wagga.nsw.gov.au"],
+      "urls": ["https://wagga.nsw.gov.au/community/grants-and-sponsorships/annual-grants-program", "https://wagga.nsw.gov.au/community/grants-and-sponsorships"],
+      "directory_urls": ["https://wagga.nsw.gov.au/community/grants-and-sponsorships"],
+      "region": "Wagga Wagga, NSW",
+      "note": "Sample regional council, not a confirmed tour destination. Check local benefit, eligible applicants and next round."
+    },
+    {
+      "name": "Orange City Council",
+      "domains": ["orange.nsw.gov.au"],
+      "urls": ["https://www.orange.nsw.gov.au/donations-and-grants/", "https://www.orange.nsw.gov.au/event-development-funding/"],
+      "directory_urls": ["https://www.orange.nsw.gov.au/donations-and-grants/"],
+      "region": "Orange, NSW",
+      "note": "Sample regional council. Check local community benefit and whether screening events qualify."
+    },
+    {
+      "name": "Dubbo Regional Council",
+      "domains": ["dubbo.nsw.gov.au"],
+      "urls": ["https://www.dubbo.nsw.gov.au/News-and-Media/News-and-Resources/grants-and-funding"],
+      "directory_urls": ["https://www.dubbo.nsw.gov.au/News-and-Media/News-and-Resources/grants-and-funding"],
+      "region": "Dubbo / Wellington, NSW",
+      "note": "Sample regional council. Linked external grant hubs may require a browser. Check each fund's local catchment."
+    },
+    {
+      "name": "Tamworth Regional Council",
+      "domains": ["tamworth.nsw.gov.au"],
+      "urls": ["https://www.tamworth.nsw.gov.au/contribute/funding-opportunities"],
+      "directory_urls": ["https://www.tamworth.nsw.gov.au/contribute/funding-opportunities"],
+      "region": "Tamworth, NSW",
+      "note": "Sample regional council. External or interactive grants hubs may require manual search."
+    }
+  ]
+}
