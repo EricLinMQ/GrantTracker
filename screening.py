@@ -92,17 +92,19 @@ def screen(text):
                 if points > scores[name]:
                     scores[name] = points
                     evidence[name] = ((heading + ': ') if context else '') + sentence[:420]
-    # Regional location, applicant type, community events and broad wellbeing are
-    # useful context only after the page shows a substantive CorriLee connection.
-    # Without this gate, unrelated regional programs can receive plausible scores.
+    # A strong project phrase is enough on its own. Broader wording stays useful
+    # when at least two dimensions agree, but is labelled for manual review.
     core_match = scores['Activities'] >= 25 or scores['Mission'] >= 20
-    if not core_match and any(scores.values()):
+    candidate_match = core_match or sum(bool(value) for value in scores.values()) >= 2
+    if not candidate_match and any(scores.values()):
         for name, value in list(scores.items()):
             if value:
-                evidence[name] = ('Context found but not scored without a core screening, '
-                                  'education, awareness or child-safety match: ' + evidence[name])
+                evidence[name] = ('Context found but not scored because it was the only '
+                                  'matching dimension: ' + evidence[name])
                 scores[name] = 0
-        flags.append('Not shortlisted: no substantive CorriLee activity or mission match found.')
+        flags.append('Not shortlisted: only one broad relevance dimension matched.')
+    elif candidate_match and not core_match:
+        flags.append('Broad match only: review the full guidelines before treating this as a fit.')
     details = '\n'.join(f'{name}: {scores[name]}/{MAXIMUMS[name]} - ' +
                         (evidence[name] or 'No supporting evidence found; not a confirmed mismatch.') for name in RULES)
     completeness = []
@@ -120,6 +122,7 @@ def screen(text):
         'Evidence checks': '\n'.join(completeness) or 'Recognised sections found; full guidelines still need review.',
         'Screening conflict': any(f.startswith('Possible conflict') for f in flags),
         'Screening core match': core_match,
+        'Screening candidate match': candidate_match,
         'Screening version': VERSION,
     }
 
@@ -129,8 +132,8 @@ def is_closed(record):
 
 
 def is_shortlisted(record):
-    """Current opportunities with a substantive project match."""
-    return not is_closed(record) and record.get('Review priority') != 'Lower relevance' and bool(record.get('Screening core match'))
+    """Current opportunities with either a strong or multi-factor broad match."""
+    return not is_closed(record) and record.get('Review priority') != 'Lower relevance' and bool(record.get('Screening candidate match'))
 
 
 def ranking_key(record):

@@ -77,8 +77,8 @@ class GrantApp:
         self.summary = tk.StringVar(value='No search yet. Closed rounds will be excluded from your shortlist.')
         ttk.Label(frame, textvariable=self.summary, wraplength=880).pack(anchor='w', pady=(0, 10))
         table_frame = ttk.Frame(frame); table_frame.pack(fill='both', expand=True)
-        self.table = ttk.Treeview(table_frame, columns=('title', 'score', 'source', 'status'), show='headings', selectmode='browse')
-        for key, title, width in [('title', 'Grant / program', 280), ('score', 'Score / 100', 100), ('source', 'Source', 150), ('status', 'Availability', 330)]:
+        self.table = ttk.Treeview(table_frame, columns=('title', 'score', 'priority', 'source', 'status'), show='headings', selectmode='browse')
+        for key, title, width in [('title', 'Grant / program', 250), ('score', 'Score', 70), ('priority', 'Review priority', 150), ('source', 'Source', 130), ('status', 'Availability', 220)]:
             self.table.heading(key, text=title); self.table.column(key, width=width, minwidth=90)
         scroll = ttk.Scrollbar(table_frame, orient='vertical', command=self.table.yview)
         self.table.configure(yscrollcommand=scroll.set); scroll.pack(side='right', fill='y'); self.table.pack(fill='both', expand=True)
@@ -119,7 +119,7 @@ class GrantApp:
                     current.sort(key=grants.ranking_key)
                     for i, record in enumerate(current):
                         key = str(i); self.links[key] = record['Source URL']
-                        self.table.insert('', 'end', iid=key, values=(record['Grant / page'], record.get('Screening score', 0), record['Source'], record['Availability']))
+                        self.table.insert('', 'end', iid=key, values=(record['Grant / page'], record.get('Screening score', 0), record['Review priority'], record['Source'], record['Availability']))
                     pages = sum(c[3] for c in coverage)
                     closed = sum(grants.is_closed(r) for r in records)
                     self.summary.set(f'{len(current)} candidates to review · {omitted} lower-relevance pages omitted · {closed} closed/past rounds · {pages} pages read')

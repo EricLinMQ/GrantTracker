@@ -57,6 +57,8 @@ NON_GRANT_TITLE = re.compile(r'\b(?:resources?|toolkits?|membership|acknowledgem
                              r'personalisation|decision tree|guidance on|how to apply|'
                              r'grant rounds|find your local council|reporting|answers bank|'
                              r'fundraising fundamentals|smartysearch)\b', re.I)
+UNRELATED_TITLE = re.compile(r'capital works|infrastructure|construction|production fund|disaster|drought|prepare.*recover|'
+                             r'business development|sports? facilities|crew connects|short to feature|researcher|western sydney', re.I)
 
 
 def normalize_url(url):
@@ -369,9 +371,9 @@ def assess(title, text, url, source, profile, today):
             mismatch.append(name + ' requirement appears inconsistent with profile; check auspicing.')
     exclusion_quote = excerpts(text, r'not eligible|ineligible|cannot (?:fund|apply)|can.t (?:fund|apply)|'
                               r'only (?:available|open)|must (?:be|have)|retrospective|already occurred', 3)
-    if re.search(r'capital works|infrastructure|construction|production fund|disaster|drought|prepare.*recover|'
-                 r'business development|sports? facilities|crew connects|short to feature|researcher|western sydney', title_low) or (
-                     source['name'] == 'Screen NSW' and title_low == 'development program'):
+    unrelated_title = bool(UNRELATED_TITLE.search(title_low) or (
+                     source['name'] == 'Screen NSW' and title_low == 'development program'))
+    if unrelated_title:
         concerns.append('Program title suggests an activity outside this education/screening project.')
         fit = 'Lower relevance'
     elif mismatch:
@@ -411,8 +413,15 @@ def assess(title, text, url, source, profile, today):
     elif fit.startswith('Potential') and not availability.startswith(('Future deadline', 'Closes today', 'Ongoing wording')):
         fit = 'Needs review'
     screening = screen(text)
-    if not screening['Screening core match'] and not availability.startswith(('Closed', 'Listed deadline passed')):
+    if unrelated_title:
+        screening.update({'Screening score': 0, 'Activities points': 0, 'Mission points': 0,
+                          'Regional points': 0, 'Applicants points': 0,
+                          'Screening core match': False, 'Screening candidate match': False,
+                          'Screening evidence': 'Excluded before scoring because the program title indicates an unrelated purpose.'})
+    elif not screening['Screening candidate match'] and not availability.startswith(('Closed', 'Listed deadline passed')):
         fit = 'Lower relevance'
+    elif not screening['Screening core match'] and fit.startswith('Potential'):
+        fit = 'Needs review'
     if any('outside this education/screening project' in c for c in concerns):
         screening['Screening conflict'] = True
         screening['Screening flags'] = 'Possible activity conflict: program title suggests an unrelated purpose.\n' + screening['Screening flags']

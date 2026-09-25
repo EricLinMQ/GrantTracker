@@ -34,6 +34,6 @@ and applicant type 10. Repeated wording never increases a score.
 Open the Screening evidence worksheet for each contribution, its supporting
 excerpt and review flags. Zero means no supporting evidence found, not a confirmed
 mismatch. Check Source coverage for unread pages. No AI API or API key is used.
-Regional location, applicant type, general events and broad wellbeing wording do
-not create a shortlist result without a substantive activity or mission match.
-See Other pages checked for grant-like pages excluded by this rule.
+Strong activity or mission wording enters the shortlist directly. Broader pages are
+kept as Needs review when at least two useful dimensions agree. A single generic
+match and clearly unrelated program titles are omitted. See Other pages checked.

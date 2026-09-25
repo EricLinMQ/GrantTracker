@@ -112,13 +112,24 @@ class ScreeningTests(unittest.TestCase):
         self.assertFalse(result['Screening core match'])
         self.assertEqual(result['Review priority'], 'Lower relevance')
         self.assertFalse(g.is_shortlisted(result))
-        self.assertIn('no substantive CorriLee', result['Screening flags'])
+        self.assertIn('unrelated purpose', result['Screening flags'])
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'drought.xlsx'
             g.make_workbook(path, [result], [], [], {}, TODAY)
             with zipfile.ZipFile(path) as z:
                 self.assertNotIn(b'Drought Stimulus Package', z.read('xl/worksheets/sheet1.xml'))
                 self.assertIn(b'Drought Stimulus Package', z.read('xl/worksheets/sheet5.xml'))
+
+    def test_multi_factor_broad_grant_is_kept_for_review(self):
+        body = ('Funding supports community events and community wellbeing in regional communities. '
+                'Eligible not-for-profit applicants can apply. Applications close 3 December 2026.')
+        result = record('Community Support Grant', body)
+        self.assertEqual(result['Screening score'], 55)
+        self.assertFalse(result['Screening core match'])
+        self.assertTrue(result['Screening candidate match'])
+        self.assertEqual(result['Review priority'], 'Needs review')
+        self.assertTrue(g.is_shortlisted(result))
+        self.assertIn('Broad match only', result['Screening flags'])
 
     def test_workbook_scores_ranks_breakdowns_and_closed_exclusion(self):
         records = [record('Low Grant', 'Funding supports community events. Eligible charities can apply.'),
