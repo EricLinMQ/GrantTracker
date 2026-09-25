@@ -14,6 +14,7 @@ the downloaded app.
 2. Open the newest release, shown at the top of the page.
 3. Under **Assets**, download the ZIP for your computer:
    - **Windows x64** for most Windows computers.
+   - **Linux x64** for most 64-bit Linux computers.
    - **Mac Apple Silicon** for Macs with an M1, M2, M3, M4, or newer M-series chip.
    - **Mac Intel** for older Intel-based Macs.
 4. Extract the downloaded ZIP before opening the app.
@@ -32,6 +33,12 @@ Keep the complete extracted folder together, then open
 
 Open **CorriLee Grant Ranker.app**. You may move it into your Applications
 folder first.
+
+### Linux
+
+Open the extracted **CorriLee Grant Ranker** folder, then run the
+**CorriLee Grant Ranker** file inside it. If your file manager asks what to do,
+choose **Run** or **Execute**. The app does not need to be installed.
 
 The current builds are not signed by a verified software publisher or notarised
 by Apple, so Windows or macOS may show a security warning. Do not turn off your
@@ -108,7 +115,7 @@ The app uses Python 3.10 or newer and Tk. To run it from source, install
 `requirements-build.txt`, run `python desktop_app.py`, and use
 `python -m unittest discover -s . -v` for the offline regression suite.
 
-GitHub Actions builds Windows x64, Mac Intel, and Mac Apple Silicon packages,
-runs the tests and packaged-app smoke checks on each native runner, and publishes
-the successful packages on the Releases page. The builds are currently unsigned
-and not notarised.
+GitHub Actions builds Windows x64, Linux x64, Mac Intel, and Mac Apple Silicon
+packages, runs the tests and packaged-app smoke checks on each native runner, and
+publishes the successful packages on the Releases page. The Windows and Mac
+builds are currently unsigned, and the Mac builds are not notarised.

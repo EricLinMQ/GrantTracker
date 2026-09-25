@@ -4,6 +4,7 @@ CORRILEE GRANT RANKER
    Windows: keep the whole extracted folder together, then open CorriLee Grant Ranker.exe.
    Mac: open CorriLee Grant Ranker.app. You can move it into Applications.
    Mac Apple Silicon is for M-series chips; Mac Intel is for Intel processors.
+   Linux: keep the extracted folder together, then run the CorriLee Grant Ranker file inside it.
 2. Click Search grants. Keep the app open and connected to the internet.
 3. When it finishes, click Save Excel and choose a folder.
 4. Click Open saved file to open the report in your spreadsheet application.
