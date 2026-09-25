@@ -79,6 +79,9 @@ Changing the level does not search the websites again. **Save Excel** exports th
 level currently selected, and the workbook records that selection. Clearly
 unrelated program titles remain excluded at every level.
 
+Results are ordered from highest to lowest score in all three levels. Conflict
+status and grant title are used only to break equal scores.
+
 ## Understand the score
 
 Each grant receives a screening score out of 100 based on wording found on the

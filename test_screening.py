@@ -84,13 +84,25 @@ class ScreeningTests(unittest.TestCase):
         self.assertIn('not a confirmed mismatch', result['Screening evidence'])
         self.assertIn('coverage may be incomplete', result['Evidence checks'])
 
-    def test_sort_conflict_below_other_candidates_and_closed_last(self):
+    def test_sort_score_descending_with_conflict_tiebreak_and_closed_last(self):
         low = record('Low Grant', 'Funding supports community events. Applications close 3 December 2026.')
         high = record('High Grant', FULL)
         conflict = record('Conflict Grant', FULL + 'Film screenings are not eligible.')
         closed = record('Closed Grant', FULL + 'Applications are closed.')
         ordered = sorted([closed, conflict, low, high], key=ranking_key)
-        self.assertEqual([r['Grant / page'] for r in ordered], ['High Grant', 'Low Grant', 'Conflict Grant', 'Closed Grant'])
+        self.assertEqual([r['Grant / page'] for r in ordered], ['High Grant', 'Conflict Grant', 'Low Grant', 'Closed Grant'])
+
+    def test_all_match_levels_sort_by_descending_score(self):
+        strict_high = record('Strict High Grant', FULL)
+        strict_low = record('Strict Low Grant', 'Funding supports community education. Applications close 3 December 2026.')
+        balanced = record('Balanced Grant', 'Funding supports community events and community wellbeing in regional communities. Applications close 3 December 2026.')
+        broad = record('Broad Grant', 'Funding supports regional communities. Applications close 3 December 2026.')
+        records = [broad, strict_low, balanced, strict_high]
+        for level in ('strict', 'balanced', 'broad'):
+            with self.subTest(level=level):
+                visible = sorted((r for r in records if g.is_shortlisted(r, level)), key=ranking_key)
+                scores = [r['Screening score'] for r in visible]
+                self.assertEqual(scores, sorted(scores, reverse=True))
 
     def test_deadline_amount_and_nsw_do_not_add_points(self):
         base = 'Funding supports community education.'

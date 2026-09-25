@@ -10,6 +10,8 @@ CORRILEE GRANT RANKER
 4. Click Save Excel and choose a folder. The selected level is saved in the report.
 5. Click Open saved file to open the report in your spreadsheet application.
 
+The app and Excel report list grants from highest to lowest score in every match level.
+
 You do not need Python, GitHub, ChatGPT or a subscription to run the packaged app.
 Excel is not required to create the report, but you need a spreadsheet viewer to read it.
 

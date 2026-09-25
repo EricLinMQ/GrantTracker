@@ -88,7 +88,7 @@ class GrantApp:
         self.table.configure(yscrollcommand=scroll.set); scroll.pack(side='right', fill='y'); self.table.pack(fill='both', expand=True)
         self.table.bind('<Double-1>', self.open_source)
         self.links = {}
-        ttk.Label(frame, text='Screening scores measure relevant wording, not eligibility. Possible conflicts rank below other candidates.\nDouble-click to open the funder. Excel includes score breakdowns, review flags and source coverage.', wraplength=880, padding=(0, 14)).pack(anchor='w')
+        ttk.Label(frame, text='Results are sorted from highest to lowest score. Scores measure relevant wording, not eligibility.\nDouble-click to open the funder. Excel includes score breakdowns, review flags and source coverage.', wraplength=880, padding=(0, 14)).pack(anchor='w')
         root.protocol('WM_DELETE_WINDOW', self.close)
         root.after(100, self.poll)
 

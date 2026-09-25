@@ -142,7 +142,7 @@ def is_shortlisted(record, match_level='balanced'):
 
 
 def ranking_key(record):
-    # Keep urgency separate; a near deadline never improves project relevance.
+    # Score is the primary order in every match level. Conflicts only break ties.
     conflict = record.get('Screening conflict', False) or record.get('Review priority') == 'Possible eligibility conflict'
-    return (is_closed(record), bool(conflict), -record.get('Screening score', 0),
+    return (is_closed(record), -record.get('Screening score', 0), bool(conflict),
             record.get('Grant / page', '').casefold(), record.get('Source URL', ''))

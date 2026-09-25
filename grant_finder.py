@@ -687,7 +687,7 @@ def make_workbook(path, records, coverage, logs, profile, today, match_level='ba
         ['Selected match level', match_level.title()],
         ['How matching works', 'Rules-based screening: activities 35, mission 30, regional focus 25, applicants 10. Highest level per category; repeated wording adds no points. No AI/API judgment.'],
         ['Screening limitations', 'Points reflect supported wording, not eligibility or success probability. Zero means no supporting evidence, not a confirmed mismatch. Unread sources appear in Source coverage.'],
-        ['Ranking order', 'Current candidates first, possible conflicts below others, then descending screening score and title. Deadlines do not affect the score.'],
+        ['Ranking order', 'Descending screening score in every match level. Conflict status and title break ties. Closed rounds remain separate. Deadlines do not affect the score.'],
         ['Geography', 'Nationwide regional opportunities, with NSW sources emphasised. Scores do not give NSW a bonus. Other states retained; no host town is assumed. Only configured council sites are searched.'],
         ['Dates and amounts', 'Dates from close/deadline wording only. Multiple round dates remain unresolved. Amounts are exact excerpts, not guaranteed grant limits.'],
         ['Website coverage', 'Only configured public pages and bounded related links are read. Logins, JavaScript search results, pagination and scanned PDFs may be inaccessible.'],
