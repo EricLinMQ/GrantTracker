@@ -64,6 +64,21 @@ If you select **Stop search**, the app finishes the web requests already under
 way and lets you save the partial results. The report shows which sources could
 not be read.
 
+### Adjust the match level
+
+After a search, use **Match level** to change the shortlist immediately:
+
+- **Strict** keeps only grants with a strong screening, education, awareness,
+  child-safety, or sexual-violence connection.
+- **Balanced** also keeps broader grants when at least two useful dimensions agree.
+  This is the default.
+- **Broad** also keeps single-dimension leads, which is useful when few grants are
+  available and you are prepared to do more manual checking.
+
+Changing the level does not search the websites again. **Save Excel** exports the
+level currently selected, and the workbook records that selection. Clearly
+unrelated program titles remain excluded at every level.
+
 ## Understand the score
 
 Each grant receives a screening score out of 100 based on wording found on the

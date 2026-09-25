@@ -128,8 +128,29 @@ class ScreeningTests(unittest.TestCase):
         self.assertFalse(result['Screening core match'])
         self.assertTrue(result['Screening candidate match'])
         self.assertEqual(result['Review priority'], 'Needs review')
-        self.assertTrue(g.is_shortlisted(result))
+        self.assertFalse(g.is_shortlisted(result, 'strict'))
+        self.assertTrue(g.is_shortlisted(result, 'balanced'))
+        self.assertTrue(g.is_shortlisted(result, 'broad'))
         self.assertIn('Broad match only', result['Screening flags'])
+
+    def test_single_dimension_lead_is_available_only_at_broad_level(self):
+        result = record('Regional Grant', 'Funding supports regional communities. Applications close 3 December 2026.')
+        self.assertEqual(result['Screening score'], 25)
+        self.assertFalse(result['Screening core match'])
+        self.assertFalse(result['Screening candidate match'])
+        self.assertTrue(result['Screening any match'])
+        self.assertFalse(g.is_shortlisted(result, 'strict'))
+        self.assertFalse(g.is_shortlisted(result, 'balanced'))
+        self.assertTrue(g.is_shortlisted(result, 'broad'))
+        with tempfile.TemporaryDirectory() as directory:
+            strict = Path(directory) / 'strict.xlsx'; broad = Path(directory) / 'broad.xlsx'
+            g.make_workbook(strict, [result], [], [], {}, TODAY, match_level='strict')
+            g.make_workbook(broad, [result], [], [], {}, TODAY, match_level='broad')
+            with zipfile.ZipFile(strict) as z:
+                self.assertNotIn(b'Regional Grant', z.read('xl/worksheets/sheet1.xml'))
+            with zipfile.ZipFile(broad) as z:
+                self.assertIn(b'Regional Grant', z.read('xl/worksheets/sheet1.xml'))
+                self.assertIn(b'Broad', z.read('xl/worksheets/sheet8.xml'))
 
     def test_workbook_scores_ranks_breakdowns_and_closed_exclusion(self):
         records = [record('Low Grant', 'Funding supports community events. Eligible charities can apply.'),

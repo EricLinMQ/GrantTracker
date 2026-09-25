@@ -6,8 +6,9 @@ CORRILEE GRANT RANKER
    Mac Apple Silicon is for M-series chips; Mac Intel is for Intel processors.
    Linux: keep the extracted folder together, then run the CorriLee Grant Ranker file inside it.
 2. Click Search grants. Keep the app open and connected to the internet.
-3. When it finishes, click Save Excel and choose a folder.
-4. Click Open saved file to open the report in your spreadsheet application.
+3. Choose Strict, Balanced or Broad under Match level. Balanced is the default.
+4. Click Save Excel and choose a folder. The selected level is saved in the report.
+5. Click Open saved file to open the report in your spreadsheet application.
 
 You do not need Python, GitHub, ChatGPT or a subscription to run the packaged app.
 Excel is not required to create the report, but you need a spreadsheet viewer to read it.

@@ -2,6 +2,7 @@
 import re
 
 VERSION = '1.0'
+MATCH_LEVELS = ('strict', 'balanced', 'broad')
 # Highest matching level wins within a category; frequency never adds points.
 RULES = {
     'Activities': [(35, r'\b(?:film screenings?|public screenings?|documentary screenings?|community touring|regional touring|touring)\b'),
@@ -95,14 +96,10 @@ def screen(text):
     # A strong project phrase is enough on its own. Broader wording stays useful
     # when at least two dimensions agree, but is labelled for manual review.
     core_match = scores['Activities'] >= 25 or scores['Mission'] >= 20
+    any_match = any(scores.values())
     candidate_match = core_match or sum(bool(value) for value in scores.values()) >= 2
-    if not candidate_match and any(scores.values()):
-        for name, value in list(scores.items()):
-            if value:
-                evidence[name] = ('Context found but not scored because it was the only '
-                                  'matching dimension: ' + evidence[name])
-                scores[name] = 0
-        flags.append('Not shortlisted: only one broad relevance dimension matched.')
+    if any_match and not candidate_match:
+        flags.append('Broad-level lead: only one relevance dimension matched; review carefully.')
     elif candidate_match and not core_match:
         flags.append('Broad match only: review the full guidelines before treating this as a fit.')
     details = '\n'.join(f'{name}: {scores[name]}/{MAXIMUMS[name]} - ' +
@@ -123,6 +120,7 @@ def screen(text):
         'Screening conflict': any(f.startswith('Possible conflict') for f in flags),
         'Screening core match': core_match,
         'Screening candidate match': candidate_match,
+        'Screening any match': any_match,
         'Screening version': VERSION,
     }
 
@@ -131,9 +129,16 @@ def is_closed(record):
     return record.get('Availability', '').startswith(('Closed', 'Listed deadline passed'))
 
 
-def is_shortlisted(record):
-    """Current opportunities with either a strong or multi-factor broad match."""
-    return not is_closed(record) and record.get('Review priority') != 'Lower relevance' and bool(record.get('Screening candidate match'))
+def is_shortlisted(record, match_level='balanced'):
+    """Apply the user's display/export level without rerunning the search."""
+    level = str(match_level).lower()
+    if level not in MATCH_LEVELS:
+        raise ValueError('Match level must be strict, balanced or broad.')
+    if is_closed(record) or record.get('Screening excluded'):
+        return False
+    key = {'strict': 'Screening core match', 'balanced': 'Screening candidate match',
+           'broad': 'Screening any match'}[level]
+    return bool(record.get(key))
 
 
 def ranking_key(record):

@@ -71,6 +71,10 @@ class GrantApp:
         self.stop_button = ttk.Button(buttons, text='Stop search', command=self.cancel, state='disabled'); self.stop_button.pack(side='left', padx=8)
         self.save_button = ttk.Button(buttons, text='Save Excel…', command=self.save, state='disabled'); self.save_button.pack(side='left')
         self.open_button = ttk.Button(buttons, text='Open saved file', command=self.open_saved, state='disabled'); self.open_button.pack(side='left', padx=8)
+        ttk.Label(buttons, text='Match level:').pack(side='left', padx=(12, 5))
+        self.match_level = tk.StringVar(value='Balanced')
+        self.level_box = ttk.Combobox(buttons, textvariable=self.match_level, values=('Strict', 'Balanced', 'Broad'), state='readonly', width=10)
+        self.level_box.pack(side='left'); self.level_box.bind('<<ComboboxSelected>>', self.change_level)
         self.status = tk.StringVar(value='Ready. Internet access is required. Searches may take several minutes.')
         ttk.Label(frame, textvariable=self.status, wraplength=880).pack(fill='x')
         self.progress = ttk.Progressbar(frame, maximum=1); self.progress.pack(fill='x', pady=(12, 16))
@@ -103,6 +107,27 @@ class GrantApp:
         self.stop.set(); self.stop_button.configure(state='disabled')
         self.status.set('Stopping after current page requests finish. Partial results can then be saved.')
 
+    def change_level(self, _event=None):
+        if not self.result:
+            return
+        self.saved = None; self.open_button.configure(state='disabled')
+        self.refresh_results()
+        self.status.set(f'{self.match_level.get()} match level selected. Save Excel to export this shortlist.')
+
+    def refresh_results(self):
+        if not self.result:
+            return
+        records, coverage, _, _ = self.result
+        level = self.match_level.get().lower()
+        current = sorted((r for r in records if grants.is_shortlisted(r, level)), key=grants.ranking_key)
+        omitted = sum(not grants.is_closed(r) and not grants.is_shortlisted(r, level) for r in records)
+        self.links.clear(); self.table.delete(*self.table.get_children())
+        for i, record in enumerate(current):
+            key = str(i); self.links[key] = record['Source URL']
+            self.table.insert('', 'end', iid=key, values=(record['Grant / page'], record.get('Screening score', 0), record['Review priority'], record['Source'], record['Availability']))
+        pages = sum(c[3] for c in coverage); closed = sum(grants.is_closed(r) for r in records)
+        self.summary.set(f'{len(current)} candidates at {self.match_level.get()} level · {omitted} pages omitted · {closed} closed/past rounds · {pages} pages read')
+
     def poll(self):
         try:
             while True:
@@ -113,16 +138,9 @@ class GrantApp:
                 elif kind == 'done':
                     self.running = False; self.result = event[1:5]
                     self.search_button.configure(state='normal'); self.stop_button.configure(state='disabled'); self.save_button.configure(state='normal')
+                    self.refresh_results()
                     records, coverage, _, _ = self.result
-                    current = [r for r in records if grants.is_shortlisted(r)]
-                    omitted = sum(not grants.is_closed(r) and not grants.is_shortlisted(r) for r in records)
-                    current.sort(key=grants.ranking_key)
-                    for i, record in enumerate(current):
-                        key = str(i); self.links[key] = record['Source URL']
-                        self.table.insert('', 'end', iid=key, values=(record['Grant / page'], record.get('Screening score', 0), record['Review priority'], record['Source'], record['Availability']))
                     pages = sum(c[3] for c in coverage)
-                    closed = sum(grants.is_closed(r) for r in records)
-                    self.summary.set(f'{len(current)} candidates to review · {omitted} lower-relevance pages omitted · {closed} closed/past rounds · {pages} pages read')
                     self.status.set('Search stopped. Save Excel for partial results and coverage.' if event[5] else 'Search complete. Choose Save Excel to keep the results.')
                     if not pages: self.status.set('No pages could be read. Check your internet connection. Save Excel for the source coverage report.')
                 elif kind == 'saved':
@@ -139,7 +157,8 @@ class GrantApp:
 
     def save(self):
         if not self.result or self.saving: return
-        name = filedialog.asksaveasfilename(parent=self.root, title='Save grant results', defaultextension='.xlsx', filetypes=[('Excel workbook', '*.xlsx')], initialfile=f'CorriLee-grants-{dt.datetime.now():%Y-%m-%d-%H%M%S}.xlsx')
+        level = self.match_level.get().lower()
+        name = filedialog.asksaveasfilename(parent=self.root, title='Save grant results', defaultextension='.xlsx', filetypes=[('Excel workbook', '*.xlsx')], initialfile=f'CorriLee-grants-{level}-{dt.datetime.now():%Y-%m-%d-%H%M%S}.xlsx')
         if not name: return
         path = Path(name)
         if path.exists():
@@ -149,7 +168,7 @@ class GrantApp:
         def work():
             try:
                 records, coverage, logs, today = self.result
-                grants.make_workbook(path, list(records), coverage, logs, self.config['profile'], today)
+                grants.make_workbook(path, list(records), coverage, logs, self.config['profile'], today, match_level=level)
                 self.events.put(('saved', path))
             except OSError:
                 self.events.put(('save_error', 'Could not save the file. Choose a writable folder and a new filename.'))

@@ -417,10 +417,15 @@ def assess(title, text, url, source, profile, today):
         screening.update({'Screening score': 0, 'Activities points': 0, 'Mission points': 0,
                           'Regional points': 0, 'Applicants points': 0,
                           'Screening core match': False, 'Screening candidate match': False,
+                          'Screening any match': False, 'Screening excluded': True,
                           'Screening evidence': 'Excluded before scoring because the program title indicates an unrelated purpose.'})
-    elif not screening['Screening candidate match'] and not availability.startswith(('Closed', 'Listed deadline passed')):
+    else:
+        screening['Screening excluded'] = False
+    if not unrelated_title and not screening['Screening any match'] and not availability.startswith(('Closed', 'Listed deadline passed')):
         fit = 'Lower relevance'
-    elif not screening['Screening core match'] and fit.startswith('Potential'):
+    elif not unrelated_title and not screening['Screening candidate match'] and not availability.startswith(('Closed', 'Listed deadline passed')):
+        fit = 'Needs review'
+    elif not unrelated_title and not screening['Screening core match'] and fit.startswith('Potential'):
         fit = 'Needs review'
     if any('outside this education/screening project' in c for c in concerns):
         screening['Screening conflict'] = True
@@ -661,7 +666,7 @@ HEADERS = ['Review priority', 'Grant / page', 'Source', 'Availability', 'Closing
            'Eligibility excerpts', 'Exclusions / conditions', 'Deadline excerpts', 'Source URL', 'Checked on']
 
 
-def make_workbook(path, records, coverage, logs, profile, today):
+def make_workbook(path, records, coverage, logs, profile, today, match_level='balanced'):
     known_closed = is_closed
     records = sorted(records, key=ranking_key)
     def summary(value, limit=160):
@@ -671,13 +676,15 @@ def make_workbook(path, records, coverage, logs, profile, today):
                     'Geography mentioned', 'Why it may fit (summary)', 'Checks (see Grant evidence)',
                     'Funding excerpt', 'Source URL', 'Checked on', 'Screening flags', 'Evidence checks']
     widths = [10, 19, 30, 43, 27, 35, 17, 25, 47, 55, 48, 58, 17, 60, 65]
-    shortlisted = [r for r in records if is_shortlisted(r)]
+    match_level = str(match_level).lower()
+    shortlisted = [r for r in records if is_shortlisted(r, match_level)]
     rows = [[rank, r.get('Screening score', 0)] + [r[h] for h in HEADERS[:6]] + [summary(r['Why it may fit']), summary(r['Checks before applying']),
              summary(r['Funding wording']), r['Source URL'], r['Checked on'], r.get('Screening flags', 'Not screened'), r.get('Evidence checks', 'Not screened')] for rank, r in enumerate(shortlisted, 1)]
     if not rows:
         rows = [['No current candidates found', 'Check Source coverage and Pages checked. This does not mean no eligible grants exist.'] + [''] * (len(main_headers)-2)]
     profile_rows = [[k, json.dumps(v, ensure_ascii=False) if isinstance(v, (list, dict)) else ('Not confirmed / not supplied' if v is None else str(v))] for k, v in profile.items()]
     profile_rows.extend([
+        ['Selected match level', match_level.title()],
         ['How matching works', 'Rules-based screening: activities 35, mission 30, regional focus 25, applicants 10. Highest level per category; repeated wording adds no points. No AI/API judgment.'],
         ['Screening limitations', 'Points reflect supported wording, not eligibility or success probability. Zero means no supporting evidence, not a confirmed mismatch. Unread sources appear in Source coverage.'],
         ['Ranking order', 'Current candidates first, possible conflicts below others, then descending screening score and title. Deadlines do not affect the score.'],
@@ -688,7 +695,7 @@ def make_workbook(path, records, coverage, logs, profile, today):
         ['Final checks', 'Confirm full guidelines, current round, eligible costs, local benefit, ACNC/DGR1/ABN, event timing and application process with the funder.'],
     ])
     sheets = [
-        ('Grant shortlist', f'Checked {today.isoformat()}. Screening score ranks relevant wording, not eligibility or success. Possible conflicts follow other candidates. See Screening evidence.', main_headers, rows, widths),
+        ('Grant shortlist', f'Checked {today.isoformat()} using the {match_level.title()} match level. Screening score ranks relevant wording, not eligibility or success. See Screening evidence.', main_headers, rows, widths),
         ('Closed and past rounds', 'Excluded from the shortlist. No future round confirmed by this search.', ['Grant / page', 'Source', 'Availability', 'Closing date', 'Source URL'], [[r[h] for h in ['Grant / page', 'Source', 'Availability', 'Closing date', 'Source URL']] for r in records if known_closed(r)], [43,27,55,17,58]),
         ('Grant evidence', 'Full extracted evidence and outstanding checks for each shortlist row. Match by Source URL; read the full live guidelines before applying.',
          ['Grant / page', 'Source URL', 'Why it may fit', 'Checks before applying', 'Funding wording', 'Eligibility excerpts', 'Exclusions / conditions', 'Deadline excerpts'],
@@ -698,10 +705,10 @@ def make_workbook(path, records, coverage, logs, profile, today):
          ['Grant / page', 'Source URL', 'Screening score', 'Activities points', 'Mission points', 'Regional points', 'Applicants points', 'Screening evidence', 'Screening flags', 'Evidence checks', 'Screening version'],
          [[r.get(h, '') for h in ['Grant / page', 'Source URL', 'Screening score', 'Activities points', 'Mission points', 'Regional points', 'Applicants points', 'Screening evidence', 'Screening flags', 'Evidence checks', 'Screening version']] for r in shortlisted],
          [43, 58, 18, 18, 18, 18, 18, 100, 75, 75, 18]),
-        ('Other pages checked', 'Excluded from the shortlist because no substantive CorriLee activity or mission match was found.',
+        ('Other pages checked', f'Excluded from the {match_level.title()} shortlist. Change the match level in the app to adjust this boundary.',
          ['Grant / page', 'Source', 'Screening score', 'Why it was excluded', 'Source URL'],
          [[r['Grant / page'], r['Source'], r.get('Screening score', 0), r.get('Screening flags', 'Lower relevance'), r['Source URL']]
-          for r in records if not known_closed(r) and not is_shortlisted(r)],
+          for r in records if not known_closed(r) and not is_shortlisted(r, match_level)],
          [43, 27, 18, 80, 58]),
         ('Source coverage', 'Every configured source is listed. Partial coverage is not a complete search of its database.',
          ['Source', 'Coverage', 'Pages attempted', 'Pages read', 'Grant records', 'Queued pages not read', 'Limitations / next action', 'Start URL', 'Checked on'], coverage,
