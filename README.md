@@ -124,7 +124,9 @@ requirements directly with the funder.
 
 ## What the app does and does not do
 
-The app checks 13 configured public sources. It ranks readable grant pages using
+The app checks 21 configured public sources. These include federal and NSW grant
+directories, arts and event funders, regional programs, community-sector listings,
+and selected regional councils. It ranks readable grant pages using
 fixed rules and supporting excerpts. It does not use AI to score grants.
 
 It does not upload your documents, submit applications, guarantee that every

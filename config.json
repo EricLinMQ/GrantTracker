@@ -110,6 +110,67 @@
       "directory_urls": ["https://www.tamworth.nsw.gov.au/contribute/funding-opportunities"],
       "region": "Tamworth, NSW",
       "note": "Sample regional council. External or interactive grants hubs may require manual search."
+    },
+    {
+      "name": "Department of Social Services grants",
+      "domains": ["dss.gov.au"],
+      "urls": ["https://www.dss.gov.au/news", "https://www.dss.gov.au/families-and-children-activity", "https://www.dss.gov.au/volunteering-initiatives/volunteer-grants"],
+      "directory_urls": ["https://www.dss.gov.au/news", "https://www.dss.gov.au/families-and-children-activity"],
+      "note": "Australian Government community, family, child-wellbeing and volunteering announcements. Formal opportunities may link to GrantConnect; confirm the current grant guidelines there."
+    },
+    {
+      "name": "Creative Australia",
+      "domains": ["creative.gov.au"],
+      "urls": ["https://creative.gov.au/investments-opportunities"],
+      "directory_urls": ["https://creative.gov.au/investments-opportunities"],
+      "note": "National arts and cultural opportunities. Check whether an existing documentary screening, audience activity or community program fits the named art form and applicant rules."
+    },
+    {
+      "name": "Create NSW",
+      "domains": ["nsw.gov.au"],
+      "urls": ["https://www.nsw.gov.au/departments-and-agencies/create-nsw"],
+      "directory_urls": ["https://www.nsw.gov.au/departments-and-agencies/create-nsw"],
+      "region": "NSW",
+      "note": "NSW arts, culture and regional touring funding. Confirm whether the applicant, activity and art-form requirements cover the proposed screening program."
+    },
+    {
+      "name": "Regional Arts NSW",
+      "domains": ["regionalartsnsw.com.au"],
+      "urls": ["https://regionalartsnsw.com.au/grants", "https://regionalartsnsw.com.au/regional-arts-fund"],
+      "directory_urls": ["https://regionalartsnsw.com.au/grants"],
+      "region": "Regional NSW",
+      "note": "Regional Arts Fund and locally delivered arts programs. Availability and eligible areas vary by round and Regional Arts Development Organisation."
+    },
+    {
+      "name": "Destination NSW event investment",
+      "domains": ["destinationnsw.com.au"],
+      "urls": ["https://www.destinationnsw.com.au/events/event-investment"],
+      "directory_urls": ["https://www.destinationnsw.com.au/events/event-investment"],
+      "region": "NSW",
+      "note": "Event investment is generally aimed at events with measurable visitor-economy benefits. A small local screening may not qualify; check scale and visitation requirements before applying."
+    },
+    {
+      "name": "Community Broadcasting Foundation",
+      "domains": ["cbf.org.au"],
+      "urls": ["https://cbf.org.au/grants/grants-available"],
+      "directory_urls": ["https://cbf.org.au/grants/grants-available"],
+      "note": "Funding is mainly for eligible community broadcasters and content producers. This can be relevant only where the project has an eligible broadcasting partner or activity."
+    },
+    {
+      "name": "Multicultural NSW grants",
+      "domains": ["multicultural.nsw.gov.au"],
+      "urls": ["https://multicultural.nsw.gov.au/multicultural-nsw-grants", "https://multicultural.nsw.gov.au/project-grants"],
+      "directory_urls": ["https://multicultural.nsw.gov.au/multicultural-nsw-grants"],
+      "region": "NSW",
+      "note": "Community project, festival and event programs that build social cohesion in culturally diverse NSW communities. Confirm that the project has a clear multicultural-community outcome."
+    },
+    {
+      "name": "RAS Foundation Community Futures Grant",
+      "domains": ["rasnsw.com.au"],
+      "urls": ["https://www.rasnsw.com.au/foundation/grants/ras-foundation-community-futures-grant", "https://www.rasnsw.com.au/foundation/foundation_Search"],
+      "directory_urls": ["https://www.rasnsw.com.au/foundation/foundation_Search"],
+      "region": "Rural NSW",
+      "note": "Supports locally led projects with broad, lasting community benefit in rural NSW. Applicants need a local resident and community-organisation partnership; confirm the current round dates."
     }
   ]
 }

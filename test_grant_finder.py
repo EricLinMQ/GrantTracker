@@ -174,7 +174,18 @@ class WorkbookTests(unittest.TestCase):
 
     def test_distributed_config_loads(self):
         config = g.load_config(g.BASE / 'config.json')
-        self.assertEqual(len(config['sources']), 13)
+        self.assertEqual(len(config['sources']), 21)
+        names = {source['name'] for source in config['sources']}
+        self.assertTrue({
+            'Department of Social Services grants',
+            'Creative Australia',
+            'Create NSW',
+            'Regional Arts NSW',
+            'Destination NSW event investment',
+            'Community Broadcasting Foundation',
+            'Multicultural NSW grants',
+            'RAS Foundation Community Futures Grant',
+        }.issubset(names))
 
     @patch.object(g.Client, 'fetch', side_effect=g.FetchProblem('Offline'))
     def test_total_outage_still_writes_diagnostic_workbook(self, fetch):

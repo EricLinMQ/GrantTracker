@@ -21,7 +21,7 @@ unread sources. A failed search is not proof that no grants exist.
 Closed rounds are kept on a separate worksheet, not in the current shortlist.
 Potential matches require checking full eligibility and current dates with the funder.
 
-The app searches 13 configured sources for regional Australia, with NSW prioritised.
+The app searches 21 configured sources for regional Australia, with NSW prioritised.
 It does not upload your documents, submit grant applications or require an API key.
 Source websites may change; obtain updated versions from your maintainer when needed.
 
