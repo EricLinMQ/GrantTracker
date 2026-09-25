@@ -28,7 +28,7 @@ from urllib.request import Request, urlopen
 from urllib.robotparser import RobotFileParser
 from xml.sax.saxutils import escape, quoteattr
 import zipfile
-from screening import screen, ranking_key, is_closed
+from screening import screen, ranking_key, is_closed, is_shortlisted
 
 BASE = Path(__file__).resolve().parent
 USER_AGENT = 'CorriLeeGrantFinder/1.0 (public grant research)'
@@ -411,6 +411,8 @@ def assess(title, text, url, source, profile, today):
     elif fit.startswith('Potential') and not availability.startswith(('Future deadline', 'Closes today', 'Ongoing wording')):
         fit = 'Needs review'
     screening = screen(text)
+    if not screening['Screening core match'] and not availability.startswith(('Closed', 'Listed deadline passed')):
+        fit = 'Lower relevance'
     if any('outside this education/screening project' in c for c in concerns):
         screening['Screening conflict'] = True
         screening['Screening flags'] = 'Possible activity conflict: program title suggests an unrelated purpose.\n' + screening['Screening flags']
@@ -660,8 +662,9 @@ def make_workbook(path, records, coverage, logs, profile, today):
                     'Geography mentioned', 'Why it may fit (summary)', 'Checks (see Grant evidence)',
                     'Funding excerpt', 'Source URL', 'Checked on', 'Screening flags', 'Evidence checks']
     widths = [10, 19, 30, 43, 27, 35, 17, 25, 47, 55, 48, 58, 17, 60, 65]
+    shortlisted = [r for r in records if is_shortlisted(r)]
     rows = [[rank, r.get('Screening score', 0)] + [r[h] for h in HEADERS[:6]] + [summary(r['Why it may fit']), summary(r['Checks before applying']),
-             summary(r['Funding wording']), r['Source URL'], r['Checked on'], r.get('Screening flags', 'Not screened'), r.get('Evidence checks', 'Not screened')] for rank, r in enumerate((r for r in records if not known_closed(r)), 1)]
+             summary(r['Funding wording']), r['Source URL'], r['Checked on'], r.get('Screening flags', 'Not screened'), r.get('Evidence checks', 'Not screened')] for rank, r in enumerate(shortlisted, 1)]
     if not rows:
         rows = [['No current candidates found', 'Check Source coverage and Pages checked. This does not mean no eligible grants exist.'] + [''] * (len(main_headers)-2)]
     profile_rows = [[k, json.dumps(v, ensure_ascii=False) if isinstance(v, (list, dict)) else ('Not confirmed / not supplied' if v is None else str(v))] for k, v in profile.items()]
@@ -680,12 +683,17 @@ def make_workbook(path, records, coverage, logs, profile, today):
         ('Closed and past rounds', 'Excluded from the shortlist. No future round confirmed by this search.', ['Grant / page', 'Source', 'Availability', 'Closing date', 'Source URL'], [[r[h] for h in ['Grant / page', 'Source', 'Availability', 'Closing date', 'Source URL']] for r in records if known_closed(r)], [43,27,55,17,58]),
         ('Grant evidence', 'Full extracted evidence and outstanding checks for each shortlist row. Match by Source URL; read the full live guidelines before applying.',
          ['Grant / page', 'Source URL', 'Why it may fit', 'Checks before applying', 'Funding wording', 'Eligibility excerpts', 'Exclusions / conditions', 'Deadline excerpts'],
-         [[r[h] for h in ['Grant / page', 'Source URL', 'Why it may fit', 'Checks before applying', 'Funding wording', 'Eligibility excerpts', 'Exclusions / conditions', 'Deadline excerpts']] for r in records],
+         [[r[h] for h in ['Grant / page', 'Source URL', 'Why it may fit', 'Checks before applying', 'Funding wording', 'Eligibility excerpts', 'Exclusions / conditions', 'Deadline excerpts']] for r in shortlisted],
          [43, 58, 55, 70, 60, 75, 65, 60]),
         ('Screening evidence', 'Highest level per category. Excluded, historical and ambiguous wording earns no points. Missing evidence can lower scores. No AI used.',
          ['Grant / page', 'Source URL', 'Screening score', 'Activities points', 'Mission points', 'Regional points', 'Applicants points', 'Screening evidence', 'Screening flags', 'Evidence checks', 'Screening version'],
-         [[r.get(h, '') for h in ['Grant / page', 'Source URL', 'Screening score', 'Activities points', 'Mission points', 'Regional points', 'Applicants points', 'Screening evidence', 'Screening flags', 'Evidence checks', 'Screening version']] for r in records],
+         [[r.get(h, '') for h in ['Grant / page', 'Source URL', 'Screening score', 'Activities points', 'Mission points', 'Regional points', 'Applicants points', 'Screening evidence', 'Screening flags', 'Evidence checks', 'Screening version']] for r in shortlisted],
          [43, 58, 18, 18, 18, 18, 18, 100, 75, 75, 18]),
+        ('Other pages checked', 'Excluded from the shortlist because no substantive CorriLee activity or mission match was found.',
+         ['Grant / page', 'Source', 'Screening score', 'Why it was excluded', 'Source URL'],
+         [[r['Grant / page'], r['Source'], r.get('Screening score', 0), r.get('Screening flags', 'Lower relevance'), r['Source URL']]
+          for r in records if not known_closed(r) and not is_shortlisted(r)],
+         [43, 27, 18, 80, 58]),
         ('Source coverage', 'Every configured source is listed. Partial coverage is not a complete search of its database.',
          ['Source', 'Coverage', 'Pages attempted', 'Pages read', 'Grant records', 'Queued pages not read', 'Limitations / next action', 'Start URL', 'Checked on'], coverage,
          [30, 38, 18, 18, 18, 22, 85, 65, 18]),

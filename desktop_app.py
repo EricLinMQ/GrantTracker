@@ -114,13 +114,15 @@ class GrantApp:
                     self.running = False; self.result = event[1:5]
                     self.search_button.configure(state='normal'); self.stop_button.configure(state='disabled'); self.save_button.configure(state='normal')
                     records, coverage, _, _ = self.result
-                    current = [r for r in records if not r['Availability'].startswith(('Closed', 'Listed deadline passed'))]
+                    current = [r for r in records if grants.is_shortlisted(r)]
+                    omitted = sum(not grants.is_closed(r) and not grants.is_shortlisted(r) for r in records)
                     current.sort(key=grants.ranking_key)
                     for i, record in enumerate(current):
                         key = str(i); self.links[key] = record['Source URL']
                         self.table.insert('', 'end', iid=key, values=(record['Grant / page'], record.get('Screening score', 0), record['Source'], record['Availability']))
                     pages = sum(c[3] for c in coverage)
-                    self.summary.set(f'{len(current)} candidates to review · {len(records)-len(current)} closed/past rounds excluded · {pages} pages read')
+                    closed = sum(grants.is_closed(r) for r in records)
+                    self.summary.set(f'{len(current)} candidates to review · {omitted} lower-relevance pages omitted · {closed} closed/past rounds · {pages} pages read')
                     self.status.set('Search stopped. Save Excel for partial results and coverage.' if event[5] else 'Search complete. Choose Save Excel to keep the results.')
                     if not pages: self.status.set('No pages could be read. Check your internet connection. Save Excel for the source coverage report.')
                 elif kind == 'saved':

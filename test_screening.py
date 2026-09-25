@@ -58,15 +58,16 @@ class ScreeningTests(unittest.TestCase):
         self.assertTrue(result['Screening conflict'])
 
     def test_history_is_not_scored_and_current_section_can_resume(self):
-        result = screen('Past recipients\nGrants funded rural film screenings about child sexual abuse.\nEligible activities\nCommunity events')
-        self.assertEqual(result['Screening score'], 10)
+        result = screen('Past recipients\nGrants funded rural film screenings about child sexual abuse.\nEligible activities\nCommunity education')
+        self.assertEqual(result['Screening score'], 25)
 
     def test_inline_history_and_unrelated_sentence_not_scored(self):
         self.assertEqual(screen('Previously funded regional film screenings.')['Screening score'], 0)
         self.assertEqual(screen('Grants are available. Film screenings.')['Screening score'], 0)
 
     def test_nonprofit_is_not_negation(self):
-        self.assertEqual(screen('Eligible applicants must be not-for-profit organisations.')['Applicants points'], 10)
+        result = screen('Funding supports community education. Eligible applicants must be not-for-profit organisations.')
+        self.assertEqual(result['Applicants points'], 10)
 
     def test_charity_donor_mention_does_not_imply_eligible_applicant(self):
         self.assertEqual(screen('Funding comes from charities.')['Applicants points'], 0)
@@ -101,6 +102,23 @@ class ScreeningTests(unittest.TestCase):
         result = record('Community Infrastructure Grant', FULL)
         self.assertTrue(result['Screening conflict'])
         self.assertIn('activity conflict', result['Screening flags'])
+
+    def test_drought_program_has_no_score_and_is_not_shortlisted(self):
+        body = ('Program objective\nTo deliver immediate economic stimulus and job creation in drought impacted areas of regional NSW. '
+                'This includes infrastructure, local support packages, community wellbeing activities and country show sponsorship. '
+                'This program is funded and administered by Department of Regional NSW. Applications are open.')
+        result = g.assess('Drought Stimulus Package', body, SOURCE['urls'][0], SOURCE, {}, TODAY)
+        self.assertEqual(result['Screening score'], 0)
+        self.assertFalse(result['Screening core match'])
+        self.assertEqual(result['Review priority'], 'Lower relevance')
+        self.assertFalse(g.is_shortlisted(result))
+        self.assertIn('no substantive CorriLee', result['Screening flags'])
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'drought.xlsx'
+            g.make_workbook(path, [result], [], [], {}, TODAY)
+            with zipfile.ZipFile(path) as z:
+                self.assertNotIn(b'Drought Stimulus Package', z.read('xl/worksheets/sheet1.xml'))
+                self.assertIn(b'Drought Stimulus Package', z.read('xl/worksheets/sheet5.xml'))
 
     def test_workbook_scores_ranks_breakdowns_and_closed_exclusion(self):
         records = [record('Low Grant', 'Funding supports community events. Eligible charities can apply.'),

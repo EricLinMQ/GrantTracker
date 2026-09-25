@@ -53,5 +53,5 @@ class DesktopTests(unittest.TestCase):
         self.assertTrue(status.startswith('Listed deadline passed'))
 
     def test_no_date_cannot_be_potential_match(self):
-        r = g.assess('Community Grant','Regional community education. Eligible charities can apply.',self.config['sources'][0]['urls'][0],self.config['sources'][0],{},dt.date.today())
+        r = g.assess('Community Grant','Funding supports regional community education. Eligible charities can apply.',self.config['sources'][0]['urls'][0],self.config['sources'][0],{},dt.date.today())
         self.assertEqual(r['Review priority'], 'Needs review')

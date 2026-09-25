@@ -80,6 +80,12 @@ A higher score means the page contains more wording related to CorriLee's work.
 It does not prove that CorriLee is eligible or likely to receive funding. A low
 score can also mean that the app could not read all the guidelines.
 
+A page must mention a substantive CorriLee activity or mission—such as community
+education, awareness, screenings, child safety, or sexual-violence prevention—before
+it can enter the shortlist. Regional location, applicant type, general events, and
+broad community wellbeing wording cannot create a score by themselves. Pages that
+do not pass this check appear only on **Other pages checked** for transparency.
+
 The Excel report includes:
 
 - **Current shortlist**: current opportunities in ranked order.
@@ -87,6 +93,8 @@ The Excel report includes:
 - **Screening evidence**: the words that contributed to each score and anything
   that needs checking.
 - **Source coverage**: websites checked, pages read, and access problems.
+- **Other pages checked**: grant-like pages excluded for lacking a substantive
+  connection to CorriLee's work.
 
 Read the full funder guidelines before applying. Confirm the closing date,
 eligible applicants, eligible activities, location rules, budget, and any other

@@ -163,7 +163,7 @@ class WorkbookTests(unittest.TestCase):
             with zipfile.ZipFile(path) as z:
                 self.assertIn(b'No current candidates found', z.read('xl/worksheets/sheet1.xml'))
                 workbook = ET.fromstring(z.read('xl/workbook.xml'))
-                self.assertEqual(len(workbook.find('{'+g.XMLNS+'}sheets')), 7)
+            self.assertEqual(len(workbook.find('{'+g.XMLNS+'}sheets')), 8)
 
     def test_bad_config_gives_clear_error(self):
         with tempfile.TemporaryDirectory() as folder:

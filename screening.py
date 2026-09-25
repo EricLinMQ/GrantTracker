@@ -92,6 +92,17 @@ def screen(text):
                 if points > scores[name]:
                     scores[name] = points
                     evidence[name] = ((heading + ': ') if context else '') + sentence[:420]
+    # Regional location, applicant type, community events and broad wellbeing are
+    # useful context only after the page shows a substantive CorriLee connection.
+    # Without this gate, unrelated regional programs can receive plausible scores.
+    core_match = scores['Activities'] >= 25 or scores['Mission'] >= 20
+    if not core_match and any(scores.values()):
+        for name, value in list(scores.items()):
+            if value:
+                evidence[name] = ('Context found but not scored without a core screening, '
+                                  'education, awareness or child-safety match: ' + evidence[name])
+                scores[name] = 0
+        flags.append('Not shortlisted: no substantive CorriLee activity or mission match found.')
     details = '\n'.join(f'{name}: {scores[name]}/{MAXIMUMS[name]} - ' +
                         (evidence[name] or 'No supporting evidence found; not a confirmed mismatch.') for name in RULES)
     completeness = []
@@ -108,12 +119,18 @@ def screen(text):
         'Screening flags': '\n'.join(dict.fromkeys(flags)) or 'No access restriction or conflict detected; eligibility unverified.',
         'Evidence checks': '\n'.join(completeness) or 'Recognised sections found; full guidelines still need review.',
         'Screening conflict': any(f.startswith('Possible conflict') for f in flags),
+        'Screening core match': core_match,
         'Screening version': VERSION,
     }
 
 
 def is_closed(record):
     return record.get('Availability', '').startswith(('Closed', 'Listed deadline passed'))
+
+
+def is_shortlisted(record):
+    """Current opportunities with a substantive project match."""
+    return not is_closed(record) and record.get('Review priority') != 'Lower relevance' and bool(record.get('Screening core match'))
 
 
 def ranking_key(record):
