@@ -53,6 +53,8 @@ ask the person who manages your computer for help.
 4. Keep the app open while it checks the listed websites. This can take several
    minutes.
 5. Review the results in the app. Double-click a grant to open the funder's page.
+   Select a grant and choose **Why this score?** to see its point breakdown,
+   supporting excerpts, review flags, and evidence limitations.
 6. Select **Save Excel** and choose where to save the report.
 7. Select **Open saved file** to view the report in Excel or another spreadsheet
    program.

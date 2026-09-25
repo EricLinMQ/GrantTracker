@@ -11,6 +11,7 @@ CORRILEE GRANT RANKER
 5. Click Open saved file to open the report in your spreadsheet application.
 
 The app and Excel report list grants from highest to lowest score in every match level.
+Select a grant and click Why this score? to see its point breakdown and evidence.
 
 You do not need Python, GitHub, ChatGPT or a subscription to run the packaged app.
 Excel is not required to create the report, but you need a spreadsheet viewer to read it.

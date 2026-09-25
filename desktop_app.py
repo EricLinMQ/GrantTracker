@@ -16,6 +16,21 @@ import grant_finder as grants
 APP_NAME = 'CorriLee Grant Ranker'
 
 
+def score_explanation(record):
+    """Plain-language score detail used by the desktop dialog and tests."""
+    parts = [
+        f"Activities: {record.get('Activities points', 0)} / 35",
+        f"Mission: {record.get('Mission points', 0)} / 30",
+        f"Regional focus: {record.get('Regional points', 0)} / 25",
+        f"Applicant type: {record.get('Applicants points', 0)} / 10",
+    ]
+    return (f"TOTAL SCORE: {record.get('Screening score', 0)} / 100\n\n"
+            + '\n'.join(parts)
+            + "\n\nWHY THESE POINTS\n" + record.get('Screening evidence', 'No evidence recorded.')
+            + "\n\nREVIEW FLAGS\n" + record.get('Screening flags', 'No flags recorded.')
+            + "\n\nEVIDENCE LIMITS\n" + record.get('Evidence checks', 'No evidence limits recorded.'))
+
+
 def search(config, events, stop):
     today = dt.date.today()
     sources = [s for s in config['sources'] if s.get('enabled', True)]
@@ -71,10 +86,12 @@ class GrantApp:
         self.stop_button = ttk.Button(buttons, text='Stop search', command=self.cancel, state='disabled'); self.stop_button.pack(side='left', padx=8)
         self.save_button = ttk.Button(buttons, text='Save Excel…', command=self.save, state='disabled'); self.save_button.pack(side='left')
         self.open_button = ttk.Button(buttons, text='Open saved file', command=self.open_saved, state='disabled'); self.open_button.pack(side='left', padx=8)
-        ttk.Label(buttons, text='Match level:').pack(side='left', padx=(12, 5))
+        filters = ttk.Frame(frame, padding=(0, 0, 0, 12)); filters.pack(fill='x')
+        ttk.Label(filters, text='Match level:').pack(side='left', padx=(0, 5))
         self.match_level = tk.StringVar(value='Balanced')
-        self.level_box = ttk.Combobox(buttons, textvariable=self.match_level, values=('Strict', 'Balanced', 'Broad'), state='readonly', width=10)
+        self.level_box = ttk.Combobox(filters, textvariable=self.match_level, values=('Strict', 'Balanced', 'Broad'), state='readonly', width=10)
         self.level_box.pack(side='left'); self.level_box.bind('<<ComboboxSelected>>', self.change_level)
+        self.details_button = ttk.Button(filters, text='Why this score?', command=self.show_score, state='disabled'); self.details_button.pack(side='left', padx=12)
         self.status = tk.StringVar(value='Ready. Internet access is required. Searches may take several minutes.')
         ttk.Label(frame, textvariable=self.status, wraplength=880).pack(fill='x')
         self.progress = ttk.Progressbar(frame, maximum=1); self.progress.pack(fill='x', pady=(12, 16))
@@ -86,8 +103,8 @@ class GrantApp:
             self.table.heading(key, text=title); self.table.column(key, width=width, minwidth=90)
         scroll = ttk.Scrollbar(table_frame, orient='vertical', command=self.table.yview)
         self.table.configure(yscrollcommand=scroll.set); scroll.pack(side='right', fill='y'); self.table.pack(fill='both', expand=True)
-        self.table.bind('<Double-1>', self.open_source)
-        self.links = {}
+        self.table.bind('<Double-1>', self.open_source); self.table.bind('<<TreeviewSelect>>', self.select_result)
+        self.links = {}; self.visible_records = {}
         ttk.Label(frame, text='Results are sorted from highest to lowest score. Scores measure relevant wording, not eligibility.\nDouble-click to open the funder. Excel includes score breakdowns, review flags and source coverage.', wraplength=880, padding=(0, 14)).pack(anchor='w')
         root.protocol('WM_DELETE_WINDOW', self.close)
         root.after(100, self.poll)
@@ -121,12 +138,34 @@ class GrantApp:
         level = self.match_level.get().lower()
         current = sorted((r for r in records if grants.is_shortlisted(r, level)), key=grants.ranking_key)
         omitted = sum(not grants.is_closed(r) and not grants.is_shortlisted(r, level) for r in records)
-        self.links.clear(); self.table.delete(*self.table.get_children())
+        self.links.clear(); self.visible_records.clear(); self.table.delete(*self.table.get_children())
+        self.details_button.configure(state='disabled')
         for i, record in enumerate(current):
-            key = str(i); self.links[key] = record['Source URL']
+            key = str(i); self.links[key] = record['Source URL']; self.visible_records[key] = record
             self.table.insert('', 'end', iid=key, values=(record['Grant / page'], record.get('Screening score', 0), record['Review priority'], record['Source'], record['Availability']))
         pages = sum(c[3] for c in coverage); closed = sum(grants.is_closed(r) for r in records)
         self.summary.set(f'{len(current)} candidates at {self.match_level.get()} level · {omitted} pages omitted · {closed} closed/past rounds · {pages} pages read')
+
+    def select_result(self, _event=None):
+        self.details_button.configure(state='normal' if self.table.selection() else 'disabled')
+
+    def show_score(self):
+        selection = self.table.selection()
+        if not selection:
+            return
+        record = self.visible_records[selection[0]]
+        window = tk.Toplevel(self.root); window.title('Why this score?'); window.geometry('760x620'); window.minsize(560, 420)
+        body = ttk.Frame(window, padding=20); body.pack(fill='both', expand=True)
+        ttk.Label(body, text=record['Grant / page'], style='Title.TLabel', wraplength=700).pack(anchor='w')
+        ttk.Label(body, text=f"{record['Review priority']} · {record['Source']}", padding=(0, 6)).pack(anchor='w')
+        text_frame = ttk.Frame(body); text_frame.pack(fill='both', expand=True, pady=(10, 12))
+        detail = tk.Text(text_frame, wrap='word', font=('Arial', 11), padx=12, pady=12)
+        scroll = ttk.Scrollbar(text_frame, orient='vertical', command=detail.yview)
+        detail.configure(yscrollcommand=scroll.set); scroll.pack(side='right', fill='y'); detail.pack(fill='both', expand=True)
+        detail.insert('1.0', score_explanation(record)); detail.configure(state='disabled')
+        actions = ttk.Frame(body); actions.pack(fill='x')
+        ttk.Button(actions, text='Open funder page', command=lambda: webbrowser.open(record['Source URL'])).pack(side='left')
+        ttk.Button(actions, text='Close', command=window.destroy).pack(side='right')
 
     def poll(self):
         try:

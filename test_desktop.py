@@ -55,3 +55,14 @@ class DesktopTests(unittest.TestCase):
     def test_no_date_cannot_be_potential_match(self):
         r = g.assess('Community Grant','Funding supports regional community education. Eligible charities can apply.',self.config['sources'][0]['urls'][0],self.config['sources'][0],{},dt.date.today())
         self.assertEqual(r['Review priority'], 'Needs review')
+
+    def test_score_explanation_contains_breakdown_evidence_and_flags(self):
+        record = {'Screening score': 70, 'Activities points': 25, 'Mission points': 10,
+                  'Regional points': 25, 'Applicants points': 10,
+                  'Screening evidence': 'Activities: supported by community education.',
+                  'Screening flags': 'Broad match only.', 'Evidence checks': 'Check full guidelines.'}
+        detail = app.score_explanation(record)
+        for expected in ('TOTAL SCORE: 70 / 100', 'Activities: 25 / 35', 'Mission: 10 / 30',
+                         'Regional focus: 25 / 25', 'Applicant type: 10 / 10',
+                         'supported by community education', 'Broad match only', 'Check full guidelines'):
+            self.assertIn(expected, detail)
