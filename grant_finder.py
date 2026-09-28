@@ -80,6 +80,14 @@ def permitted(url, domains):
     return any(h == d or h.endswith('.' + d) for d in domains)
 
 
+def source_excludes(url, source):
+    """Return true for configured administrative/non-opportunity URL subtrees."""
+    path = urlsplit(url).path.rstrip('/') or '/'
+    return any(path == prefix or path.startswith(prefix + '/')
+               for raw in source.get('exclude_paths', [])
+               for prefix in [raw.rstrip('/') or '/'])
+
+
 def clean(text):
     return re.sub(r'\s+', ' ', text).strip()
 
@@ -329,7 +337,9 @@ def assess(title, text, url, source, profile, today):
     text = active_text(text)
     lower = text.lower()
     title_low = title.lower()
-    if source.get('public_directory_only') or NON_GRANT_TITLE.search(title) or re.fullmatch(r'funding centre\s*[|:-]\s*grants', title_low):
+    if (source.get('public_directory_only') or source_excludes(url, source)
+            or NON_GRANT_TITLE.search(title)
+            or re.fullmatch(r'funding centre\s*[|:-]\s*grants', title_low)):
         return None
     hits = {name: [term for term in terms if re.search(r'\b' + re.escape(term) + r'\b', lower)]
             for name, terms in TOPICS.items()}
@@ -500,7 +510,7 @@ def crawl_source(source, profile, max_pages, depth, timeout, today, api_key=None
             url = normalize_url(url)
         except ValueError:
             return
-        if url in queued or not permitted(url, source['domains']):
+        if url in queued or not permitted(url, source['domains']) or source_excludes(url, source):
             return
         queued.add(url)
         seq += 1
@@ -738,6 +748,10 @@ def load_config(path):
     for s in cfg['sources']:
         if not s.get('name') or not s.get('urls') or not s.get('domains'):
             raise ValueError('Each source needs a name, urls list and domains list.')
+        if (not isinstance(s.get('exclude_paths', []), list)
+                or any(not isinstance(path, str) or not path.startswith('/')
+                       for path in s.get('exclude_paths', []))):
+            raise ValueError('source.exclude_paths must be a list of paths beginning with /.')
         for url in s['urls']:
             normalize_url(url)
             if not permitted(url, s['domains']):

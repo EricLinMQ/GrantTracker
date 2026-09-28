@@ -87,6 +87,14 @@ class ExtractionTests(unittest.TestCase):
         source = dict(SOURCE, public_directory_only=True)
         self.assertIsNone(g.assess('Some grant article', TEXT, SOURCE['urls'][0], source, PROFILE, TODAY))
 
+    def test_configured_non_opportunity_path_cannot_create_grant_record(self):
+        source = dict(SOURCE, exclude_paths=['/grant-processes'])
+        for url in ['https://example.org/grant-processes',
+                    'https://example.org/grant-processes/after-you-have-received-grant/child-safety-obligations-grants']:
+            self.assertTrue(g.source_excludes(url, source))
+            self.assertIsNone(g.assess('Child safety obligations for grants', TEXT, url,
+                                       source, PROFILE, TODAY))
+
     def test_known_program_seed_is_detected_without_word_grant(self):
         r = g.assess('Strengthening Rural Communities - Small & Vital', TEXT, SOURCE['urls'][0], SOURCE, PROFILE, TODAY)
         self.assertEqual(r['Review priority'], 'Potential match - verify eligibility')
@@ -128,6 +136,24 @@ class CrawlTests(unittest.TestCase):
         self.assertEqual(coverage[2], 1)
         self.assertEqual(coverage[5], 2)
         self.assertIn('Page limit', coverage[6])
+
+    @patch.object(g.Client, 'fetch')
+    def test_configured_non_opportunity_path_is_not_fetched(self, fetch):
+        source = {'name': 'Example', 'urls': ['https://example.org/funding/'],
+                  'domains': ['example.org'], 'directory_urls': ['https://example.org/funding/'],
+                  'exclude_paths': ['/grant-processes']}
+        bad = 'https://example.org/grant-processes/after-you-have-received-grant'
+        good = 'https://example.org/community-grant'
+        fetch.side_effect = [
+            ('Funding opportunities', TEXT, [(bad, 'Grant processes'),
+                                               (good, 'Community grant')],
+             source['urls'][0], 'Public HTML'),
+            ('Community Grant', TEXT, [], good, 'Public HTML'),
+        ]
+        records, _, _ = g.crawl_source(source, PROFILE, 3, 1, 2, TODAY)
+        self.assertEqual([call.args[0] for call in fetch.call_args_list],
+                         [source['urls'][0], good])
+        self.assertEqual(len(records), 1)
 
     @patch.object(g, 'search_api', side_effect=g.FetchProblem('Search unavailable'))
     @patch.object(g.Client, 'fetch', return_value=('Community Grant', TEXT, [], SOURCE['urls'][0], 'Public HTML'))

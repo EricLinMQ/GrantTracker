@@ -116,6 +116,7 @@
       "domains": ["dss.gov.au"],
       "urls": ["https://www.dss.gov.au/news", "https://www.dss.gov.au/families-and-children-activity", "https://www.dss.gov.au/volunteering-initiatives/volunteer-grants"],
       "directory_urls": ["https://www.dss.gov.au/news", "https://www.dss.gov.au/families-and-children-activity"],
+      "exclude_paths": ["/grant-processes"],
       "note": "Australian Government community, family, child-wellbeing and volunteering announcements. Formal opportunities may link to GrantConnect; confirm the current grant guidelines there."
     },
     {
