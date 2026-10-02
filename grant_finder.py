@@ -502,6 +502,8 @@ def crawl_source(source, profile, max_pages, depth, timeout, today, api_key=None
     client = Client(timeout)
     queue, queued, visited, candidates, page_log = [], set(), set(), [], []
     notes = [source.get('note', '')]
+    if source.get('_origin') == 'user':
+        notes.append('Website added in app settings.')
     seq = 0
 
     def enqueue(url, level, priority):
@@ -725,7 +727,7 @@ def make_workbook(path, records, coverage, logs, profile, today, match_level='ba
          [30, 38, 18, 18, 18, 22, 85, 65, 18]),
         ('Pages checked', 'Includes failed URLs and non-grant pages, so missing access never appears as a successful empty search.',
          ['Source', 'URL', 'Fetch result', 'Classification / issue', 'Format', 'Checked on'], logs, [30, 75, 28, 85, 25, 18]),
-        ('Search profile', 'Snapshot of the settings used for this run. Change config.json for the next search.', ['Setting', 'Value'], profile_rows, [34, 115]),
+        ('Search profile', 'Snapshot of the organisation and project settings used for this run.', ['Setting', 'Value'], profile_rows, [34, 115]),
     ]
     write_xlsx(path, sheets)
 
@@ -745,17 +747,27 @@ def load_config(path):
         dt.date.fromisoformat(p['event_date'])
     if p.get('budget_aud') is not None and (isinstance(p['budget_aud'], bool) or not isinstance(p['budget_aud'], (int, float)) or p['budget_aud'] <= 0):
         raise ValueError('profile.budget_aud must be a positive number or null.')
+    source_ids = []
     for s in cfg['sources']:
         if not s.get('name') or not s.get('urls') or not s.get('domains'):
             raise ValueError('Each source needs a name, urls list and domains list.')
+        if s.get('id'):
+            if not isinstance(s['id'], str):
+                raise ValueError('source.id must be text.')
+            source_ids.append(s['id'])
         if (not isinstance(s.get('exclude_paths', []), list)
                 or any(not isinstance(path, str) or not path.startswith('/')
                        for path in s.get('exclude_paths', []))):
             raise ValueError('source.exclude_paths must be a list of paths beginning with /.')
-        for url in s['urls']:
+        directories = s.get('directory_urls', [])
+        if not isinstance(directories, list):
+            raise ValueError('source.directory_urls must be a list.')
+        for url in s['urls'] + directories:
             normalize_url(url)
             if not permitted(url, s['domains']):
                 raise ValueError(f'Source URL is outside its configured domains: {url}')
+    if len(source_ids) != len(set(source_ids)):
+        raise ValueError('Source ids must be unique.')
     return cfg
 
 

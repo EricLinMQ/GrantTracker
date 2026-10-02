@@ -75,14 +75,17 @@ of disabling the computer's security features.
 
 1. Make sure the computer is connected to the internet.
 2. Open CorriLee Grant Ranker.
-3. Select **Search grants**.
-4. Keep the app open while it checks the listed websites. This can take several
+3. To change the search list, select **Manage websites**. You can switch built-in
+   websites on or off, edit them, or add your own without editing files or rebuilding
+   the app. Select **Done** when the displayed list is ready.
+4. Select **Search grants**.
+5. Keep the app open while it checks the listed websites. This can take several
    minutes.
-5. Review the results in the app. Double-click a grant to open the funder's page.
+6. Review the results in the app. Double-click a grant to open the funder's page.
    Select a grant and choose **Why this score?** to see its point breakdown,
    supporting excerpts, review flags, and evidence limitations.
-6. Select **Save Excel** and choose where to save the report.
-7. Select **Open saved file** to view the report in Excel or another spreadsheet
+7. Select **Save Excel** and choose where to save the report.
+8. Select **Open saved file** to view the report in Excel or another spreadsheet
    program.
 
 The app can create the report without Microsoft Excel, but you need Excel or
@@ -150,7 +153,8 @@ requirements directly with the funder.
 
 ## What the app does and does not do
 
-The app checks 21 configured public sources. These include federal and NSW grant
+The app comes with 21 configured public sources. You can change the selected list
+under **Manage websites**. The built-in sources include federal and NSW grant
 directories, arts and event funders, regional programs, community-sector listings,
 and selected regional councils. It ranks readable grant pages using
 fixed rules and supporting excerpts. It does not use AI to score grants.
@@ -159,6 +163,20 @@ It does not upload your documents, submit applications, guarantee that every
 grant will be found, or confirm eligibility. Websites can change or block
 automated reading, so an empty or incomplete report does not mean that no grants
 are available.
+
+### Change the websites checked
+
+Select **Manage websites** before starting a search. **Use / Skip** changes whether
+a website is checked. **Add website** asks for a name, one or more starting web
+addresses, and whether those pages list grants or describe individual grants. The
+app derives the permitted website names from those addresses and will not wander
+onto unrelated domains. **Check website** can test the first address, but a failed
+test does not prevent saving because some sites temporarily block automated access.
+
+Built-in websites can be restored individually. **Restore all defaults** also
+removes websites added on that computer. Personal website choices are saved in the
+operating system's normal application-settings folder, not inside the downloaded
+app, so replacing the app with a newer version does not normally erase them.
 
 ## Help and updates
 

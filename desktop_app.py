@@ -12,8 +12,216 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import webbrowser
 import grant_finder as grants
+from source_settings import SourceStore, validate_source
 
 APP_NAME = 'CorriLee Grant Ranker'
+
+
+class SourceEditor:
+    """Plain-language editor that translates UI choices into crawler fields."""
+    def __init__(self, parent, source=None):
+        self.source = dict(source or {})
+        self.result = None
+        self.check_events = queue.Queue()
+        self.window = tk.Toplevel(parent)
+        self.window.title('Edit website' if source else 'Add website')
+        self.window.geometry('700x650'); self.window.minsize(560, 520)
+        self.window.transient(parent)
+        body = ttk.Frame(self.window, padding=20); body.pack(fill='both', expand=True)
+        ttk.Label(body, text='Website name').pack(anchor='w')
+        self.name = tk.StringVar(value=self.source.get('name', ''))
+        ttk.Entry(body, textvariable=self.name).pack(fill='x', pady=(4, 14))
+        ttk.Label(body, text='Starting pages — one web address per line').pack(anchor='w')
+        self.urls = tk.Text(body, height=6, wrap='none')
+        self.urls.pack(fill='x', pady=(4, 6)); self.urls.insert('1.0', '\n'.join(self.source.get('urls', [])))
+        ttk.Label(body, text='The app stays on these websites and follows grant-related links.', foreground='#555555').pack(anchor='w')
+
+        directories = self.source.get('directory_urls', [])
+        urls = self.source.get('urls', [])
+        if source and directories and set(directories) != set(urls):
+            initial_type = 'mixed'
+        elif source and not directories:
+            initial_type = 'individual'
+        else:
+            initial_type = 'listing'
+        self.page_type = tk.StringVar(value=initial_type)
+        kind = ttk.LabelFrame(body, text='What do these pages contain?', padding=10)
+        kind.pack(fill='x', pady=14)
+        ttk.Radiobutton(kind, text='Lists of grants (recommended)', variable=self.page_type, value='listing').pack(anchor='w')
+        ttk.Radiobutton(kind, text='Individual grant pages', variable=self.page_type, value='individual').pack(anchor='w')
+        if initial_type == 'mixed':
+            ttk.Radiobutton(kind, text='A mixture — keep the current classifications', variable=self.page_type, value='mixed').pack(anchor='w')
+
+        advanced = ttk.LabelFrame(body, text='Optional details', padding=10); advanced.pack(fill='both', expand=True)
+        ttk.Label(advanced, text='Region or service area').grid(row=0, column=0, sticky='w')
+        self.region = tk.StringVar(value=self.source.get('region', ''))
+        ttk.Entry(advanced, textvariable=self.region).grid(row=1, column=0, sticky='ew', pady=(3, 9))
+        ttk.Label(advanced, text='Note for the coverage report').grid(row=2, column=0, sticky='w')
+        self.note = tk.Text(advanced, height=3, wrap='word'); self.note.grid(row=3, column=0, sticky='ew', pady=(3, 9))
+        self.note.insert('1.0', self.source.get('note', ''))
+        ttk.Label(advanced, text='Website sections to skip — paths such as /news, one per line').grid(row=4, column=0, sticky='w')
+        self.exclusions = tk.Text(advanced, height=3, wrap='none'); self.exclusions.grid(row=5, column=0, sticky='ew', pady=(3, 0))
+        self.exclusions.insert('1.0', '\n'.join(self.source.get('exclude_paths', [])))
+        advanced.columnconfigure(0, weight=1)
+
+        self.feedback = tk.StringVar(value='')
+        ttk.Label(body, textvariable=self.feedback, wraplength=640).pack(fill='x', pady=(10, 4))
+        actions = ttk.Frame(body); actions.pack(fill='x')
+        self.check_button = ttk.Button(actions, text='Check website', command=self.check); self.check_button.pack(side='left')
+        ttk.Button(actions, text='Cancel', command=self.window.destroy).pack(side='right')
+        ttk.Button(actions, text='Save', command=self.save).pack(side='right', padx=8)
+        self.window.protocol('WM_DELETE_WINDOW', self.window.destroy)
+        self.window.wait_visibility(); self.window.grab_set(); self.window.focus_set(); self.window.wait_window()
+
+    @staticmethod
+    def _lines(widget):
+        return [line.strip() for line in widget.get('1.0', 'end').splitlines() if line.strip()]
+
+    def value(self):
+        candidate = {key: value for key, value in self.source.items() if not key.startswith('_')}
+        candidate['name'] = self.name.get().strip()
+        candidate['urls'] = self._lines(self.urls)
+        candidate['domains'] = list(dict.fromkeys(grants.host(grants.normalize_url(url)) for url in candidate['urls']))
+        if self.page_type.get() == 'listing':
+            candidate['directory_urls'] = list(candidate['urls'])
+        elif self.page_type.get() == 'individual':
+            candidate['directory_urls'] = []
+        else:
+            candidate['directory_urls'] = list(self.source.get('directory_urls', []))
+        region = self.region.get().strip(); note = self.note.get('1.0', 'end').strip()
+        if region: candidate['region'] = region
+        else: candidate.pop('region', None)
+        if note: candidate['note'] = note
+        else: candidate.pop('note', None)
+        candidate['exclude_paths'] = self._lines(self.exclusions)
+        return validate_source(candidate)
+
+    def save(self):
+        try:
+            self.result = self.value()
+        except ValueError as exc:
+            self.feedback.set(str(exc)); return
+        self.window.destroy()
+
+    def check(self):
+        try:
+            source = self.value()
+        except ValueError as exc:
+            self.feedback.set(str(exc)); return
+        self.feedback.set('Checking the first page…'); self.check_button.configure(state='disabled')
+        def work():
+            try:
+                title, _, _, final, _ = grants.Client(12).fetch(source['urls'][0])
+                message = f'Read successfully: {title or final}'
+            except grants.FetchProblem as exc:
+                message = f'Could not read it automatically: {exc} You can still save it for manual coverage.'
+            except Exception:
+                message = 'Could not read it automatically. You can still save it for manual coverage.'
+            self.check_events.put(message)
+        threading.Thread(target=work, daemon=True).start()
+        self.window.after(100, self._poll_check)
+
+    def _poll_check(self):
+        try:
+            message = self.check_events.get_nowait()
+        except queue.Empty:
+            if self.window.winfo_exists(): self.window.after(100, self._poll_check)
+            return
+        if self.window.winfo_exists():
+            self.feedback.set(message); self.check_button.configure(state='normal')
+
+
+class SourceManager:
+    def __init__(self, parent, store, changed):
+        self.store = store; self.changed = changed
+        self.window = tk.Toplevel(parent); self.window.title('Manage websites')
+        self.window.geometry('900x580'); self.window.minsize(700, 440)
+        self.window.transient(parent)
+        body = ttk.Frame(self.window, padding=20); body.pack(fill='both', expand=True)
+        ttk.Label(body, text='Choose which websites to check', font=('Arial', 18, 'bold')).pack(anchor='w')
+        ttk.Label(body, text='Built-in websites can be changed or switched off. Websites you add are stored only on this computer.', wraplength=820).pack(anchor='w', pady=(5, 14))
+        frame = ttk.Frame(body); frame.pack(fill='both', expand=True)
+        self.table = ttk.Treeview(frame, columns=('on', 'name', 'origin', 'address'), show='headings', selectmode='browse')
+        for key, title, width in [('on','Use',60),('name','Website',230),('origin','Type',100),('address','Starting address',420)]:
+            self.table.heading(key, text=title); self.table.column(key, width=width, minwidth=55)
+        scroll = ttk.Scrollbar(frame, orient='vertical', command=self.table.yview)
+        self.table.configure(yscrollcommand=scroll.set); scroll.pack(side='right', fill='y'); self.table.pack(fill='both', expand=True)
+        self.table.bind('<Double-1>', lambda _event: self.toggle())
+        self.table.bind('<Return>', lambda _event: self.edit())
+        actions = ttk.Frame(body, padding=(0, 12, 0, 0)); actions.pack(fill='x')
+        ttk.Button(actions, text='Add website…', command=self.add).pack(side='left')
+        ttk.Button(actions, text='Edit…', command=self.edit).pack(side='left', padx=6)
+        ttk.Button(actions, text='Use / Skip', command=self.toggle).pack(side='left')
+        ttk.Button(actions, text='Remove', command=self.remove).pack(side='left', padx=6)
+        ttk.Button(actions, text='Restore', command=self.restore).pack(side='left')
+        ttk.Button(actions, text='Restore all defaults', command=self.restore_all).pack(side='left', padx=6)
+        ttk.Button(actions, text='Done', command=self.window.destroy).pack(side='right')
+        self.summary = tk.StringVar(); ttk.Label(body, textvariable=self.summary).pack(anchor='w', pady=(10, 0))
+        self.refresh(); self.window.wait_visibility(); self.window.grab_set(); self.window.focus_set(); self.window.wait_window()
+
+    def refresh(self, select=None):
+        self.table.delete(*self.table.get_children())
+        config = self.store.effective_config()
+        for source in config['sources']:
+            identifier = source['id']
+            values = ('Yes' if source.get('enabled', True) else 'No', source['name'],
+                      'Added by you' if source.get('_origin') == 'user' else 'Built in', source['urls'][0])
+            self.table.insert('', 'end', iid=identifier, values=values)
+        enabled = sum(source.get('enabled', True) for source in config['sources'])
+        self.summary.set(f'{enabled} of {len(config["sources"])} websites selected')
+        if select and self.table.exists(select): self.table.selection_set(select); self.table.focus(select)
+        self.changed()
+
+    def selected(self):
+        selection = self.table.selection()
+        return selection[0] if selection else None
+
+    def source(self, identifier):
+        return next(source for source in self.store.effective_config()['sources'] if source['id'] == identifier)
+
+    def add(self):
+        editor = SourceEditor(self.window)
+        if editor.result:
+            try:
+                identifier = self.store.put_source(editor.result); self.refresh(identifier)
+            except (ValueError, OSError) as exc: messagebox.showerror('Could not save website', str(exc), parent=self.window)
+
+    def edit(self):
+        identifier = self.selected()
+        if not identifier: return
+        editor = SourceEditor(self.window, self.source(identifier))
+        if editor.result:
+            try:
+                self.store.put_source(editor.result, identifier); self.refresh(identifier)
+            except (ValueError, OSError) as exc: messagebox.showerror('Could not save website', str(exc), parent=self.window)
+
+    def toggle(self):
+        identifier = self.selected()
+        if not identifier: return
+        source = self.source(identifier)
+        try:
+            self.store.set_enabled(identifier, not source.get('enabled', True)); self.refresh(identifier)
+        except (ValueError, OSError) as exc: messagebox.showerror('Could not save setting', str(exc), parent=self.window)
+
+    def remove(self):
+        identifier = self.selected()
+        if not identifier: return
+        source = self.source(identifier)
+        if self.store.is_builtin(identifier):
+            question = f'Skip {source["name"]}? You can restore it later.'
+        else:
+            question = f'Remove {source["name"]}?'
+        if messagebox.askyesno('Remove website', question, parent=self.window):
+            self.store.remove(identifier); self.refresh()
+
+    def restore(self):
+        identifier = self.selected()
+        if not identifier: return
+        self.store.restore(identifier); self.refresh(identifier if self.table.exists(identifier) else None)
+
+    def restore_all(self):
+        if messagebox.askyesno('Restore all defaults?', 'Discard all website changes and remove websites added on this computer?', parent=self.window):
+            self.store.restore(); self.refresh()
 
 
 def score_explanation(record):
@@ -70,7 +278,8 @@ class GrantApp:
         root.title(APP_NAME); root.geometry('980x700'); root.minsize(760, 540)
         self.events = queue.Queue(); self.stop = threading.Event()
         self.running = False; self.saving = False; self.result = None; self.saved = None
-        self.config = grants.load_config(grants.BASE / 'config.json')
+        self.source_store = SourceStore(grants.BASE / 'config.json')
+        self.config = self.source_store.effective_config()
         style = ttk.Style(root)
         if 'clam' in style.theme_names(): style.theme_use('clam')
         style.configure('.', font=('Arial', 11))
@@ -86,13 +295,16 @@ class GrantApp:
         self.stop_button = ttk.Button(buttons, text='Stop search', command=self.cancel, state='disabled'); self.stop_button.pack(side='left', padx=8)
         self.save_button = ttk.Button(buttons, text='Save Excel…', command=self.save, state='disabled'); self.save_button.pack(side='left')
         self.open_button = ttk.Button(buttons, text='Open saved file', command=self.open_saved, state='disabled'); self.open_button.pack(side='left', padx=8)
+        self.sources_button = ttk.Button(buttons, text='Manage websites…', command=self.manage_sources); self.sources_button.pack(side='left')
         filters = ttk.Frame(frame, padding=(0, 0, 0, 12)); filters.pack(fill='x')
         ttk.Label(filters, text='Match level:').pack(side='left', padx=(0, 5))
         self.match_level = tk.StringVar(value='Balanced')
         self.level_box = ttk.Combobox(filters, textvariable=self.match_level, values=('Strict', 'Balanced', 'Broad'), state='readonly', width=10)
         self.level_box.pack(side='left'); self.level_box.bind('<<ComboboxSelected>>', self.change_level)
         self.details_button = ttk.Button(filters, text='Why this score?', command=self.show_score, state='disabled'); self.details_button.pack(side='left', padx=12)
-        self.status = tk.StringVar(value='Ready. Internet access is required. Searches may take several minutes.')
+        self.source_count = tk.StringVar(); ttk.Label(filters, textvariable=self.source_count).pack(side='right')
+        initial_status = self.source_store.warning or 'Ready. Internet access is required. Searches may take several minutes.'
+        self.status = tk.StringVar(value=initial_status)
         ttk.Label(frame, textvariable=self.status, wraplength=880).pack(fill='x')
         self.progress = ttk.Progressbar(frame, maximum=1); self.progress.pack(fill='x', pady=(12, 16))
         self.summary = tk.StringVar(value='No search yet. Closed rounds will be excluded from your shortlist.')
@@ -107,14 +319,30 @@ class GrantApp:
         self.links = {}; self.visible_records = {}
         ttk.Label(frame, text='Results are sorted from highest to lowest score. Scores measure relevant wording, not eligibility.\nDouble-click to open the funder. Excel includes score breakdowns, review flags and source coverage.', wraplength=880, padding=(0, 14)).pack(anchor='w')
         root.protocol('WM_DELETE_WINDOW', self.close)
+        self.sources_changed()
         root.after(100, self.poll)
+
+    def sources_changed(self):
+        self.config = self.source_store.effective_config()
+        enabled = sum(source.get('enabled', True) for source in self.config['sources'])
+        self.source_count.set(f'{enabled} websites selected')
+
+    def manage_sources(self):
+        if self.running or self.saving:
+            messagebox.showinfo('Please wait', 'Website settings cannot be changed during a search or while saving.', parent=self.root); return
+        SourceManager(self.root, self.source_store, self.sources_changed)
+        self.status.set('Website choices saved. They will be used for the next search.')
 
     def start(self):
         if self.running or self.saving: return
+        self.sources_changed()
+        if not any(source.get('enabled', True) for source in self.config['sources']):
+            messagebox.showinfo('Choose a website', 'Select at least one website under Manage websites before searching.', parent=self.root); return
         if self.result and not self.saved and not messagebox.askyesno('Start a new search?', 'The current results have not been saved. Replace them with a new search?', parent=self.root): return
         self.running = True; self.stop.clear(); self.result = None; self.saved = None
         self.links.clear(); self.table.delete(*self.table.get_children())
         self.search_button.configure(state='disabled'); self.stop_button.configure(state='normal')
+        self.sources_button.configure(state='disabled')
         self.save_button.configure(state='disabled'); self.open_button.configure(state='disabled')
         self.progress.configure(value=0, maximum=max(1, sum(s.get('enabled', True) for s in self.config['sources'])))
         self.status.set('Searching public grant websites…'); self.summary.set('Keep the app open until the search completes.')
@@ -177,6 +405,7 @@ class GrantApp:
                 elif kind == 'done':
                     self.running = False; self.result = event[1:5]
                     self.search_button.configure(state='normal'); self.stop_button.configure(state='disabled'); self.save_button.configure(state='normal')
+                    self.sources_button.configure(state='normal')
                     self.refresh_results()
                     records, coverage, _, _ = self.result
                     pages = sum(c[3] for c in coverage)
@@ -184,11 +413,12 @@ class GrantApp:
                     if not pages: self.status.set('No pages could be read. Check your internet connection. Save Excel for the source coverage report.')
                 elif kind == 'saved':
                     self.saving = False; self.saved = event[1]
-                    self.search_button.configure(state='normal'); self.save_button.configure(state='normal'); self.open_button.configure(state='normal')
+                    self.search_button.configure(state='normal'); self.save_button.configure(state='normal'); self.open_button.configure(state='normal'); self.sources_button.configure(state='normal')
                     self.status.set(f'Saved: {self.saved}')
                 elif kind in ('error', 'save_error'):
                     self.running = False; self.saving = False
                     self.search_button.configure(state='normal'); self.stop_button.configure(state='disabled')
+                    self.sources_button.configure(state='normal')
                     self.save_button.configure(state='normal' if self.result else 'disabled')
                     self.status.set(event[1]); messagebox.showerror(APP_NAME, event[1], parent=self.root)
         except queue.Empty: pass
@@ -203,6 +433,7 @@ class GrantApp:
         if path.exists():
             messagebox.showinfo('Choose a new filename', 'Existing reports are kept safe. Please choose a new filename.', parent=self.root); return
         self.saving = True; self.save_button.configure(state='disabled'); self.search_button.configure(state='disabled')
+        self.sources_button.configure(state='disabled')
         self.status.set('Preparing Excel file…')
         def work():
             try:

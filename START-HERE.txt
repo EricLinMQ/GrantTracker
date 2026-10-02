@@ -5,10 +5,12 @@ CORRILEE GRANT RANKER
    Mac: open CorriLee Grant Ranker.app. You can move it into Applications.
    Mac Apple Silicon is for M-series chips; Mac Intel is for Intel processors.
    Linux: keep the extracted folder together, then run the CorriLee Grant Ranker file inside it.
-2. Click Search grants. Keep the app open and connected to the internet.
-3. Choose Strict, Balanced or Broad under Match level. Balanced is the default.
-4. Click Save Excel and choose a folder. The selected level is saved in the report.
-5. Click Open saved file to open the report in your spreadsheet application.
+2. Optional: click Manage websites to switch sources on or off, edit them, or add
+   another public grant website. These choices are saved on this computer.
+3. Click Search grants. Keep the app open and connected to the internet.
+4. Choose Strict, Balanced or Broad under Match level. Balanced is the default.
+5. Click Save Excel and choose a folder. The selected level is saved in the report.
+6. Click Open saved file to open the report in your spreadsheet application.
 
 The app and Excel report list grants from highest to lowest score in every match level.
 Select a grant and click Why this score? to see its point breakdown and evidence.
@@ -21,7 +23,8 @@ unread sources. A failed search is not proof that no grants exist.
 Closed rounds are kept on a separate worksheet, not in the current shortlist.
 Potential matches require checking full eligibility and current dates with the funder.
 
-The app searches 21 configured sources for regional Australia, with NSW prioritised.
+The app comes with 21 configured sources for regional Australia, with NSW prioritised.
+Manage websites can change the selected list without editing files.
 It does not upload your documents, submit grant applications or require an API key.
 Source websites may change; obtain updated versions from your maintainer when needed.
 

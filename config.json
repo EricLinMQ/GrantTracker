@@ -13,6 +13,7 @@
   },
   "sources": [
     {
+      "id": "grantconnect",
       "name": "GrantConnect - federal grants",
       "domains": ["grants.gov.au", "finance.gov.au"],
       "urls": ["https://www.grants.gov.au/Go/List", "https://www.finance.gov.au/individuals/find-grant-grantconnect"],
@@ -20,6 +21,7 @@
       "note": "Search current and forecast opportunities manually if the interactive portal is unreadable. Suggested terms: child sexual abuse, prevention, regional, community education, sexual violence."
     },
     {
+      "id": "nsw-grants-finder",
       "name": "NSW Government Grants Finder",
       "domains": ["nsw.gov.au"],
       "urls": ["https://www.nsw.gov.au/grants-and-funding"],
@@ -28,6 +30,7 @@
       "note": "Public linked listings only. Interactive filters and pagination are not exhaustively searched. Try Not-for-profit, Regional, Community, Education, Events, Youth and Health and wellbeing filters manually."
     },
     {
+      "id": "frrr",
       "name": "FRRR",
       "domains": ["frrr.org.au"],
       "urls": ["https://frrr.org.au/funding/src-small-vital/", "https://frrr.org.au/funding/find-funding-now/"],
@@ -35,6 +38,7 @@
       "note": "National rural/regional funding. Different rounds and streams can share one page; confirm the relevant round and project start date."
     },
     {
+      "id": "clubgrants",
       "name": "ClubGRANTS",
       "domains": ["clubgrants.com.au"],
       "urls": ["https://www.clubgrants.com.au/how-to-apply", "https://www.clubgrants.com.au/find-your-local-grant-round"],
@@ -43,6 +47,7 @@
       "note": "Local-round search may require a browser and town/club selection. Category 1 is the main community welfare lead; check local dates and benefits. No login is attempted."
     },
     {
+      "id": "australian-communities-foundation",
       "name": "Australian Communities Foundation",
       "domains": ["communityfoundation.org.au"],
       "urls": ["https://communityfoundation.org.au/grant-rounds/", "https://communityfoundation.org.au/not-for-profits/", "https://communityfoundation.org.au/not-for-profits/seeking-funding/"],
@@ -50,6 +55,7 @@
       "note": "Open grant rounds and donor platform are different routes. Platform listing is not an awarded grant; ACNC/DGR1 requirements must be checked."
     },
     {
+      "id": "funding-centre",
       "name": "Funding Centre",
       "public_directory_only": true,
       "domains": ["fundingcentre.com.au"],
@@ -58,6 +64,7 @@
       "note": "Subscription grant database. This script reads only public pages; member-only search is NOT covered. Use your own subscription in a browser for complete database access."
     },
     {
+      "id": "screen-nsw",
       "name": "Screen NSW",
       "domains": ["screen.nsw.gov.au"],
       "urls": ["https://www.screen.nsw.gov.au/funding-support/audience-development", "https://www.screen.nsw.gov.au/funding-support"],
@@ -66,6 +73,7 @@
       "note": "Screening/audience programs may require a film festival organisation or partner. Existing-film screenings are different from film production."
     },
     {
+      "id": "national-office-child-safety",
       "name": "National Office for Child Safety",
       "domains": ["childsafety.gov.au"],
       "urls": ["https://www.childsafety.gov.au/news"],
@@ -73,6 +81,7 @@
       "note": "Announcements can describe old rounds or direct support services. Check the current GrantConnect guidelines before applying."
     },
     {
+      "id": "nsw-council-directory",
       "name": "NSW council directory",
       "domains": ["olg.nsw.gov.au"],
       "urls": ["https://www.olg.nsw.gov.au/public/find-your-local-council"],
@@ -80,6 +89,7 @@
       "note": "A council directory, not a grant database. External council websites are not automatically all crawled. Add grant pages for other host councils to config.json. Four regional NSW councils are included below as a starting sample."
     },
     {
+      "id": "wagga-wagga-council",
       "name": "Wagga Wagga City Council",
       "domains": ["wagga.nsw.gov.au"],
       "urls": ["https://wagga.nsw.gov.au/community/grants-and-sponsorships/annual-grants-program", "https://wagga.nsw.gov.au/community/grants-and-sponsorships"],
@@ -88,6 +98,7 @@
       "note": "Sample regional council, not a confirmed tour destination. Check local benefit, eligible applicants and next round."
     },
     {
+      "id": "orange-council",
       "name": "Orange City Council",
       "domains": ["orange.nsw.gov.au"],
       "urls": ["https://www.orange.nsw.gov.au/donations-and-grants/", "https://www.orange.nsw.gov.au/event-development-funding/"],
@@ -96,6 +107,7 @@
       "note": "Sample regional council. Check local community benefit and whether screening events qualify."
     },
     {
+      "id": "dubbo-council",
       "name": "Dubbo Regional Council",
       "domains": ["dubbo.nsw.gov.au"],
       "urls": ["https://www.dubbo.nsw.gov.au/News-and-Media/News-and-Resources/grants-and-funding"],
@@ -104,6 +116,7 @@
       "note": "Sample regional council. Linked external grant hubs may require a browser. Check each fund's local catchment."
     },
     {
+      "id": "tamworth-council",
       "name": "Tamworth Regional Council",
       "domains": ["tamworth.nsw.gov.au"],
       "urls": ["https://www.tamworth.nsw.gov.au/contribute/funding-opportunities"],
@@ -112,6 +125,7 @@
       "note": "Sample regional council. External or interactive grants hubs may require manual search."
     },
     {
+      "id": "dss-grants",
       "name": "Department of Social Services grants",
       "domains": ["dss.gov.au"],
       "urls": ["https://www.dss.gov.au/news", "https://www.dss.gov.au/families-and-children-activity", "https://www.dss.gov.au/volunteering-initiatives/volunteer-grants"],
@@ -120,6 +134,7 @@
       "note": "Australian Government community, family, child-wellbeing and volunteering announcements. Formal opportunities may link to GrantConnect; confirm the current grant guidelines there."
     },
     {
+      "id": "creative-australia",
       "name": "Creative Australia",
       "domains": ["creative.gov.au"],
       "urls": ["https://creative.gov.au/investments-opportunities"],
@@ -127,6 +142,7 @@
       "note": "National arts and cultural opportunities. Check whether an existing documentary screening, audience activity or community program fits the named art form and applicant rules."
     },
     {
+      "id": "create-nsw",
       "name": "Create NSW",
       "domains": ["nsw.gov.au"],
       "urls": ["https://www.nsw.gov.au/departments-and-agencies/create-nsw"],
@@ -135,6 +151,7 @@
       "note": "NSW arts, culture and regional touring funding. Confirm whether the applicant, activity and art-form requirements cover the proposed screening program."
     },
     {
+      "id": "regional-arts-nsw",
       "name": "Regional Arts NSW",
       "domains": ["regionalartsnsw.com.au"],
       "urls": ["https://regionalartsnsw.com.au/grants", "https://regionalartsnsw.com.au/regional-arts-fund"],
@@ -143,6 +160,7 @@
       "note": "Regional Arts Fund and locally delivered arts programs. Availability and eligible areas vary by round and Regional Arts Development Organisation."
     },
     {
+      "id": "destination-nsw",
       "name": "Destination NSW event investment",
       "domains": ["destinationnsw.com.au"],
       "urls": ["https://www.destinationnsw.com.au/events/event-investment"],
@@ -151,6 +169,7 @@
       "note": "Event investment is generally aimed at events with measurable visitor-economy benefits. A small local screening may not qualify; check scale and visitation requirements before applying."
     },
     {
+      "id": "community-broadcasting-foundation",
       "name": "Community Broadcasting Foundation",
       "domains": ["cbf.org.au"],
       "urls": ["https://cbf.org.au/grants/grants-available"],
@@ -158,6 +177,7 @@
       "note": "Funding is mainly for eligible community broadcasters and content producers. This can be relevant only where the project has an eligible broadcasting partner or activity."
     },
     {
+      "id": "multicultural-nsw",
       "name": "Multicultural NSW grants",
       "domains": ["multicultural.nsw.gov.au"],
       "urls": ["https://multicultural.nsw.gov.au/multicultural-nsw-grants", "https://multicultural.nsw.gov.au/project-grants"],
@@ -166,6 +186,7 @@
       "note": "Community project, festival and event programs that build social cohesion in culturally diverse NSW communities. Confirm that the project has a clear multicultural-community outcome."
     },
     {
+      "id": "ras-community-futures",
       "name": "RAS Foundation Community Futures Grant",
       "domains": ["rasnsw.com.au"],
       "urls": ["https://www.rasnsw.com.au/foundation/grants/ras-foundation-community-futures-grant", "https://www.rasnsw.com.au/foundation/foundation_Search"],
