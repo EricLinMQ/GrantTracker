@@ -1,7 +1,7 @@
 # CorriLee Grant Ranker
 
 CorriLee Grant Ranker is a desktop app that searches public grant websites and
-puts the most relevant opportunities at the top of an Excel report. It is set
+puts the most relevant opportunities at the top of an Excel or CSV report. It is set
 up for The CorriLee Foundation's regional documentary screenings and community
 education work, with Australian opportunities and NSW sources prioritised.
 
@@ -84,7 +84,8 @@ of disabling the computer's security features.
 6. Review the results in the app. Double-click a grant to open the funder's page.
    Select a grant and choose **Why this score?** to see its point breakdown,
    supporting excerpts, review flags, and evidence limitations.
-7. Select **Save Excel** and choose where to save the report.
+7. Select **Save Excel or CSV** and choose a format and location. Excel contains
+   the complete multi-sheet report; CSV contains the currently selected shortlist.
 8. Select **Open saved file** to view the report in Excel or another spreadsheet
    program.
 
@@ -106,8 +107,8 @@ After a search, use **Match level** to change the shortlist immediately:
 - **Broad** also keeps single-dimension leads, which is useful when few grants are
   available and you are prepared to do more manual checking.
 
-Changing the level does not search the websites again. **Save Excel** exports the
-level currently selected, and the workbook records that selection. Clearly
+Changing the level does not search the websites again. **Save Excel or CSV** exports
+the level currently selected, and the Excel workbook records that selection. Clearly
 unrelated program titles remain excluded at every level.
 
 Results are ordered from highest to lowest score in all three levels. Conflict
@@ -146,6 +147,10 @@ The Excel report includes:
 - **Source coverage**: websites checked, pages read, and access problems.
 - **Other pages checked**: grant-like pages excluded for lacking a substantive
   connection to CorriLee's work.
+
+The CSV option is a single flat file containing the ranked current shortlist,
+including scoring and evidence columns. Use Excel when you also need closed rounds,
+source coverage, other checked pages, and the search profile.
 
 Read the full funder guidelines before applying. Confirm the closing date,
 eligible applicants, eligible activities, location rules, budget, and any other

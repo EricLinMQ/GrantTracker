@@ -1,5 +1,6 @@
 """Offline regression tests. No network, API key or third-party dependencies."""
 import datetime as dt
+import csv
 import json
 from pathlib import Path
 import sys
@@ -190,6 +191,24 @@ class WorkbookTests(unittest.TestCase):
                 self.assertIn(b'No current candidates found', z.read('xl/worksheets/sheet1.xml'))
                 workbook = ET.fromstring(z.read('xl/workbook.xml'))
             self.assertEqual(len(workbook.find('{'+g.XMLNS+'}sheets')), 8)
+
+    def test_csv_exports_ranked_shortlist_safely(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'shortlist.csv'
+            record = {header: '' for header in g.HEADERS}
+            record.update({'Grant / page': '=DANGEROUS()', 'Source URL': 'https://example.org/grant',
+                           'Review priority': 'Potential match', 'Availability': 'Open',
+                           'Screening score': 75, 'Checked on': TODAY})
+            with patch.object(g, 'is_shortlisted', return_value=True):
+                g.make_csv(path, [record])
+            with path.open(encoding='utf-8-sig', newline='') as source:
+                rows = list(csv.reader(source))
+            self.assertEqual(rows[0][0:3], ['Rank', 'Review priority', 'Grant / page'])
+            self.assertEqual(rows[1][0], '1')
+            self.assertEqual(rows[1][2], "'=DANGEROUS()")
+            self.assertIn(TODAY.isoformat(), rows[1])
+            with self.assertRaises(FileExistsError):
+                g.make_csv(path, [record])
 
     def test_bad_config_gives_clear_error(self):
         with tempfile.TemporaryDirectory() as folder:

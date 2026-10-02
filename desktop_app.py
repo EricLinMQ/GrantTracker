@@ -289,11 +289,11 @@ class GrantApp:
         frame = ttk.Frame(root, padding=24); frame.pack(fill='both', expand=True)
         ttk.Label(frame, text=APP_NAME, style='Title.TLabel').pack(anchor='w')
         ttk.Label(frame, text='Regional Australia · rules-based screening', padding=(0, 8)).pack(anchor='w')
-        ttk.Label(frame, text='Search public grant pages, review the evidence, and save your Excel shortlist.').pack(anchor='w')
+        ttk.Label(frame, text='Search public grant pages, review the evidence, and save your shortlist as Excel or CSV.').pack(anchor='w')
         buttons = ttk.Frame(frame, padding=(0, 18)); buttons.pack(fill='x')
         self.search_button = ttk.Button(buttons, text='Search grants', command=self.start); self.search_button.pack(side='left')
         self.stop_button = ttk.Button(buttons, text='Stop search', command=self.cancel, state='disabled'); self.stop_button.pack(side='left', padx=8)
-        self.save_button = ttk.Button(buttons, text='Save Excel…', command=self.save, state='disabled'); self.save_button.pack(side='left')
+        self.save_button = ttk.Button(buttons, text='Save Excel or CSV…', command=self.save, state='disabled'); self.save_button.pack(side='left')
         self.open_button = ttk.Button(buttons, text='Open saved file', command=self.open_saved, state='disabled'); self.open_button.pack(side='left', padx=8)
         self.sources_button = ttk.Button(buttons, text='Manage websites…', command=self.manage_sources); self.sources_button.pack(side='left')
         filters = ttk.Frame(frame, padding=(0, 0, 0, 12)); filters.pack(fill='x')
@@ -317,7 +317,7 @@ class GrantApp:
         self.table.configure(yscrollcommand=scroll.set); scroll.pack(side='right', fill='y'); self.table.pack(fill='both', expand=True)
         self.table.bind('<Double-1>', self.open_source); self.table.bind('<<TreeviewSelect>>', self.select_result)
         self.links = {}; self.visible_records = {}
-        ttk.Label(frame, text='Results are sorted from highest to lowest score. Scores measure relevant wording, not eligibility.\nDouble-click to open the funder. Excel includes score breakdowns, review flags and source coverage.', wraplength=880, padding=(0, 14)).pack(anchor='w')
+        ttk.Label(frame, text='Results are sorted from highest to lowest score. Scores measure relevant wording, not eligibility.\nDouble-click to open the funder. Excel includes the complete report; CSV exports the current shortlist.', wraplength=880, padding=(0, 14)).pack(anchor='w')
         root.protocol('WM_DELETE_WINDOW', self.close)
         self.sources_changed()
         root.after(100, self.poll)
@@ -357,7 +357,7 @@ class GrantApp:
             return
         self.saved = None; self.open_button.configure(state='disabled')
         self.refresh_results()
-        self.status.set(f'{self.match_level.get()} match level selected. Save Excel to export this shortlist.')
+        self.status.set(f'{self.match_level.get()} match level selected. Save Excel or CSV to export this shortlist.')
 
     def refresh_results(self):
         if not self.result:
@@ -409,7 +409,7 @@ class GrantApp:
                     self.refresh_results()
                     records, coverage, _, _ = self.result
                     pages = sum(c[3] for c in coverage)
-                    self.status.set('Search stopped. Save Excel for partial results and coverage.' if event[5] else 'Search complete. Choose Save Excel to keep the results.')
+                    self.status.set('Search stopped. Save Excel or CSV for partial results.' if event[5] else 'Search complete. Choose Save Excel or CSV to keep the results.')
                     if not pages: self.status.set('No pages could be read. Check your internet connection. Save Excel for the source coverage report.')
                 elif kind == 'saved':
                     self.saving = False; self.saved = event[1]
@@ -427,23 +427,27 @@ class GrantApp:
     def save(self):
         if not self.result or self.saving: return
         level = self.match_level.get().lower()
-        name = filedialog.asksaveasfilename(parent=self.root, title='Save grant results', defaultextension='.xlsx', filetypes=[('Excel workbook', '*.xlsx')], initialfile=f'CorriLee-grants-{level}-{dt.datetime.now():%Y-%m-%d-%H%M%S}.xlsx')
+        name = filedialog.asksaveasfilename(parent=self.root, title='Save grant results', defaultextension='.xlsx',
+                                            filetypes=[('Excel workbook', '*.xlsx'), ('CSV shortlist', '*.csv')],
+                                            initialfile=f'CorriLee-grants-{level}-{dt.datetime.now():%Y-%m-%d-%H%M%S}.xlsx')
         if not name: return
         path = Path(name)
+        if path.suffix.lower() not in ('.xlsx', '.csv'):
+            messagebox.showinfo('Choose a file type', 'The filename must end in .xlsx or .csv.', parent=self.root); return
         if path.exists():
             messagebox.showinfo('Choose a new filename', 'Existing reports are kept safe. Please choose a new filename.', parent=self.root); return
         self.saving = True; self.save_button.configure(state='disabled'); self.search_button.configure(state='disabled')
         self.sources_button.configure(state='disabled')
-        self.status.set('Preparing Excel file…')
+        self.status.set(f'Preparing {path.suffix[1:].upper()} file…')
         def work():
             try:
                 records, coverage, logs, today = self.result
-                grants.make_workbook(path, list(records), coverage, logs, self.config['profile'], today, match_level=level)
+                grants.make_report(path, list(records), coverage, logs, self.config['profile'], today, match_level=level)
                 self.events.put(('saved', path))
             except OSError:
                 self.events.put(('save_error', 'Could not save the file. Choose a writable folder and a new filename.'))
             except Exception:
-                self.events.put(('save_error', 'Could not prepare Excel. Your results are still available; please try again.'))
+                self.events.put(('save_error', 'Could not prepare the report. Your results are still available; please try again.'))
         threading.Thread(target=work, daemon=True).start()
 
     def open_saved(self):
@@ -451,7 +455,7 @@ class GrantApp:
         try:
             if sys.platform == 'win32': os.startfile(str(self.saved))
             else: subprocess.Popen(['open' if sys.platform == 'darwin' else 'xdg-open', str(self.saved)])
-        except OSError: messagebox.showinfo('Saved file', f'Open this file in Excel or another spreadsheet app:\n{self.saved}', parent=self.root)
+        except OSError: messagebox.showinfo('Saved file', f'Open this file in a spreadsheet app:\n{self.saved}', parent=self.root)
 
     def open_source(self, _event=None):
         selection = self.table.selection()
@@ -459,7 +463,7 @@ class GrantApp:
 
     def close(self):
         if self.saving:
-            messagebox.showinfo('Saving', 'Please wait until the Excel file has finished saving.', parent=self.root); return
+            messagebox.showinfo('Saving', 'Please wait until the report has finished saving.', parent=self.root); return
         if self.running:
             messagebox.showinfo('Search in progress', 'Click Stop search, then wait for current requests to finish before closing.', parent=self.root); return
         if self.result and not self.saved and not messagebox.askyesno('Close without saving?', 'Your search results have not been saved. Close anyway?', parent=self.root): return

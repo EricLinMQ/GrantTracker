@@ -1,5 +1,6 @@
 """Runs inside the packaged executable on each native build runner."""
 import datetime as dt
+import csv
 import json
 from pathlib import Path
 import tempfile
@@ -30,7 +31,14 @@ def run(output):
                 assert b'Audience Development Program' in z.read('xl/worksheets/sheet2.xml')
                 assert b'Screening score / 100' in z.read('xl/worksheets/sheet1.xml')
                 assert b'Activities points' in z.read('xl/worksheets/sheet4.xml')
+            csv_path = Path(folder) / 'results.csv'
+            g.make_csv(csv_path, [current, closed])
+            with csv_path.open(encoding='utf-8-sig', newline='') as source_file:
+                csv_rows = list(csv.reader(source_file))
+            assert csv_rows[0][0:3] == ['Rank', 'Review priority', 'Grant / page']
+            assert len(csv_rows) == 2
+            assert csv_rows[1][2] == 'Community Grant'
         import certifi
         assert Path(certifi.where()).is_file()
-        Path(output).write_text(json.dumps({'passed':True,'sources':len(app.config['sources']), 'gui':True,'excel':True,'closed_round_excluded':True, 'screening_score':True}))
+        Path(output).write_text(json.dumps({'passed':True,'sources':len(app.config['sources']), 'gui':True,'excel':True,'csv':True,'closed_round_excluded':True, 'screening_score':True}))
     finally: root.destroy()

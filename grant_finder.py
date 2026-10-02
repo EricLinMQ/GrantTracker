@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures
+import csv
 import datetime as dt
 import heapq
 import io
@@ -673,6 +674,36 @@ def write_xlsx(path, sheets):
             os.unlink(temporary)
 
 
+def csv_value(value):
+    """Return a spreadsheet-safe CSV value without losing dates or Unicode."""
+    if isinstance(value, dt.date):
+        return value.isoformat()
+    value = '' if value is None else str(value)
+    # Prevent spreadsheet programs from interpreting scraped text as a formula.
+    if value.startswith(('=', '+', '-', '@', '\t', '\r')):
+        return "'" + value
+    return value
+
+
+def write_csv(path, headers, rows):
+    """Write a UTF-8 CSV atomically and never overwrite an existing report."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        raise FileExistsError(f'Output already exists: {path}. Choose a new --output name.')
+    fd, temporary = tempfile.mkstemp(suffix='.csv', dir=path.parent)
+    os.close(fd)
+    try:
+        with open(temporary, 'w', encoding='utf-8-sig', newline='') as output:
+            writer = csv.writer(output)
+            writer.writerow([csv_value(value) for value in headers])
+            writer.writerows([csv_value(value) for value in row] for row in rows)
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
 HEADERS = ['Review priority', 'Grant / page', 'Source', 'Availability', 'Closing date',
            'Geography mentioned', 'Why it may fit', 'Checks before applying', 'Funding wording',
            'Eligibility excerpts', 'Exclusions / conditions', 'Deadline excerpts', 'Source URL', 'Checked on']
@@ -732,6 +763,30 @@ def make_workbook(path, records, coverage, logs, profile, today, match_level='ba
     write_xlsx(path, sheets)
 
 
+def make_csv(path, records, match_level='balanced'):
+    """Export the selected ranked shortlist as a single flat CSV table."""
+    records = sorted(records, key=ranking_key)
+    shortlisted = [record for record in records if is_shortlisted(record, str(match_level).lower())]
+    score_headers = ['Screening score', 'Activities points', 'Mission points', 'Regional points',
+                     'Applicants points', 'Screening evidence', 'Screening flags', 'Evidence checks',
+                     'Screening version']
+    headers = ['Rank'] + HEADERS + score_headers
+    rows = [[rank] + [record.get(header, '') for header in HEADERS + score_headers]
+            for rank, record in enumerate(shortlisted, 1)]
+    write_csv(path, headers, rows)
+
+
+def make_report(path, records, coverage, logs, profile, today, match_level='balanced'):
+    """Create an Excel workbook or CSV shortlist according to the filename."""
+    suffix = Path(path).suffix.lower()
+    if suffix == '.xlsx':
+        make_workbook(path, records, coverage, logs, profile, today, match_level)
+    elif suffix == '.csv':
+        make_csv(path, records, match_level)
+    else:
+        raise ValueError('Report filename must end in .xlsx or .csv')
+
+
 def load_config(path):
     with open(path, encoding='utf-8-sig') as f:
         cfg = json.load(f)
@@ -774,7 +829,7 @@ def load_config(path):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--config', type=Path, default=BASE / 'config.json')
-    parser.add_argument('--output', type=Path, help='New .xlsx filename; existing files are never overwritten.')
+    parser.add_argument('--output', type=Path, help='New .xlsx or .csv filename; existing files are never overwritten.')
     parser.add_argument('--max-pages', type=int, default=12, help='Maximum pages attempted per source (default 12).')
     parser.add_argument('--depth', type=int, default=2, help='Related-link depth (default 2).')
     parser.add_argument('--workers', type=int, default=3, help='Sites searched concurrently (default 3).')
@@ -794,8 +849,8 @@ def main(argv=None):
             raise ValueError('Set TAVILY_API_KEY or run without --use-tavily. Default mode needs no key.')
         today = dt.date.today()
         out = args.output or BASE / 'results' / f'grants_{dt.datetime.now():%Y%m%d_%H%M%S_%f}.xlsx'
-        if out.suffix.lower() != '.xlsx':
-            raise ValueError('--output must end in .xlsx')
+        if out.suffix.lower() not in ('.xlsx', '.csv'):
+            raise ValueError('--output must end in .xlsx or .csv')
         if out.exists():
             raise ValueError('Output exists. Choose another filename or use the automatic timestamped default.')
         print(f'Searching {len(sources)} sources, up to {args.max_pages} public pages each. This may take several minutes.', flush=True)
@@ -823,10 +878,13 @@ def main(argv=None):
         records = list(unique.values())
         coverage.sort(key=lambda x: [s['name'] for s in sources].index(x[0]))
         logs.sort(key=lambda x: (x[0], x[1]))
-        make_workbook(out, records, coverage, logs, cfg['profile'], today)
+        make_report(out, records, coverage, logs, cfg['profile'], today)
         read_count = sum(c[3] for c in coverage)
         print(f'\nSaved: {out.resolve()}\n{len(records)} unique grant-page records; {read_count} pages read.', flush=True)
-        print('Open Source coverage first for blocked sites, then filter Grant shortlist. No applications were submitted.', flush=True)
+        if out.suffix.lower() == '.xlsx':
+            print('Open Source coverage first for blocked sites, then filter Grant shortlist. No applications were submitted.', flush=True)
+        else:
+            print('The CSV contains the ranked shortlist. Use Excel format for source coverage and other report tabs. No applications were submitted.', flush=True)
         return 0 if read_count else 2
     except (ValueError, OSError) as e:
         print(f'Could not run: {e}', file=sys.stderr)

@@ -9,7 +9,7 @@ CORRILEE GRANT RANKER
    another public grant website. These choices are saved on this computer.
 3. Click Search grants. Keep the app open and connected to the internet.
 4. Choose Strict, Balanced or Broad under Match level. Balanced is the default.
-5. Click Save Excel and choose a folder. The selected level is saved in the report.
+5. Click Save Excel or CSV and choose a folder and format. The selected level is saved in the report.
 6. Click Open saved file to open the report in your spreadsheet application.
 
 The app and Excel report list grants from highest to lowest score in every match level.
@@ -34,7 +34,7 @@ by Apple. Windows/macOS may warn or block launch. Contact the maintainer for a s
 release if blocked. Do not disable your computer's security protections.
 
 RANKING
-The app and Excel shortlist sort by screening score, with possible conflicts below
+The app, Excel shortlist, and CSV shortlist sort by screening score, with possible conflicts below
 other candidates. Scores measure relevant wording, not eligibility or likelihood
 of winning. Activities contribute up to 35 points, mission 30, regional focus 25,
 and applicant type 10. Repeated wording never increases a score.
