@@ -117,8 +117,7 @@ class SourceEditor:
         self.window.geometry('740x760'); self.window.minsize(620, 650)
         set_window_background(self.window)
         self.window.transient(parent)
-        add_brand_header(self.window, 'Edit website' if source else 'Add website',
-                         'Set where the grant search should begin.', height=78)
+        add_brand_header(self.window, 'Edit website' if source else 'Add website', height=72)
         outer = ttk.Frame(self.window, style='App.TFrame', padding=20); outer.pack(fill='both', expand=True)
         body = ttk.Frame(outer, style='Card.TFrame', padding=20); body.pack(fill='both', expand=True)
         ttk.Label(body, text='Website details', style='Section.TLabel').pack(anchor='w', pady=(0, 16))
@@ -242,42 +241,55 @@ class SourceManager:
         self.window.geometry('1080x700'); self.window.minsize(820, 560)
         set_window_background(self.window)
         self.window.transient(parent)
-        add_brand_header(self.window, 'Manage websites',
-                         'Step 1 of 4 · Choose the public sources included in the next search.')
+        add_brand_header(self.window, 'Manage websites', height=72)
         outer = ttk.Frame(self.window, style='App.TFrame', padding=20); outer.pack(fill='both', expand=True)
         body = ttk.Frame(outer, style='Card.TFrame', padding=18); body.pack(fill='both', expand=True)
         heading = ttk.Frame(body, style='Card.TFrame'); heading.pack(fill='x', pady=(0, 8))
         ttk.Label(heading, text='Websites to check', style='Section.TLabel').pack(side='left')
         self.summary = tk.StringVar()
         ttk.Label(heading, textvariable=self.summary, style='Muted.TLabel').pack(side='right')
-        ttk.Label(body, text='Double-click a row to include or skip it. Built-in sources can always be restored.',
+        ttk.Label(body, text='Step 1 of 4 · Double-click a row to include or skip it. Built-in sources can always be restored.',
                   style='Muted.TLabel', wraplength=900).pack(anchor='w', pady=(0, 12))
         frame = ttk.Frame(body, style='Card.TFrame'); frame.pack(fill='both', expand=True)
-        self.table = ttk.Treeview(frame, columns=('on', 'name', 'origin', 'address'), show='headings', selectmode='browse')
-        for key, title, width in [('on','Status',100),('name','Website',260),('origin','Type',110),('address','Starting address',450)]:
-            self.table.heading(key, text=title); self.table.column(key, width=width, minwidth=55)
-        scroll = ttk.Scrollbar(frame, orient='vertical', command=self.table.yview)
-        self.table.configure(yscrollcommand=scroll.set); scroll.pack(side='right', fill='y'); self.table.pack(fill='both', expand=True)
+        self.table = ttk.Treeview(frame, columns=('on', 'name', 'origin', 'address'),
+                                  show='headings', selectmode='browse', height=8)
+        columns = [
+            ('on', 'Status', 90, 80, False),
+            ('name', 'Website', 240, 180, True),
+            ('origin', 'Type', 110, 90, False),
+            ('address', 'Starting address', 480, 280, True),
+        ]
+        for key, title, width, minimum, stretch in columns:
+            self.table.heading(key, text=title)
+            self.table.column(key, width=width, minwidth=minimum, stretch=stretch)
+        vertical = ttk.Scrollbar(frame, orient='vertical', command=self.table.yview)
+        horizontal = ttk.Scrollbar(frame, orient='horizontal', command=self.table.xview)
+        self.table.configure(yscrollcommand=vertical.set, xscrollcommand=horizontal.set)
+        vertical.pack(side='right', fill='y')
+        horizontal.pack(side='bottom', fill='x')
+        self.table.pack(fill='both', expand=True)
         self.table.bind('<Double-1>', lambda _event: self.toggle())
         self.table.bind('<Return>', lambda _event: self.edit())
         actions = ttk.Frame(body, style='Card.TFrame', padding=(0, 14, 0, 0)); actions.pack(fill='x')
-        ttk.Button(actions, text='Add website', command=self.add,
+        common_actions = ttk.Frame(actions, style='Card.TFrame'); common_actions.pack(side='left')
+        utility_actions = ttk.Frame(actions, style='Card.TFrame'); utility_actions.pack(side='right')
+        ttk.Button(common_actions, text='Add website', command=self.add,
                    style='Secondary.TButton').pack(side='left')
-        self.edit_button = ttk.Button(actions, text='Edit', command=self.edit, style='Quiet.TButton')
+        self.edit_button = ttk.Button(common_actions, text='Edit', command=self.edit, style='Quiet.TButton')
         self.edit_button.pack(side='left', padx=(8, 0))
-        self.toggle_button = ttk.Button(actions, text='Include / Skip', command=self.toggle,
+        self.toggle_button = ttk.Button(common_actions, text='Include / Skip', command=self.toggle,
                                          style='Quiet.TButton')
         self.toggle_button.pack(side='left', padx=8)
-        self.restore_button = ttk.Button(actions, text='Restore', command=self.restore,
+        self.restore_button = ttk.Button(common_actions, text='Restore', command=self.restore,
                                           style='Quiet.TButton')
         self.restore_button.pack(side='left')
-        self.remove_button = ttk.Button(actions, text='Remove', command=self.remove,
+        self.remove_button = ttk.Button(common_actions, text='Remove', command=self.remove,
                                          style='Danger.TButton')
         self.remove_button.pack(side='left', padx=8)
-        ttk.Button(actions, text='Restore all defaults', command=self.restore_all,
+        ttk.Button(utility_actions, text='Restore defaults', command=self.restore_all,
                    style='Quiet.TButton').pack(side='left')
-        ttk.Button(actions, text='Done', command=self.window.destroy,
-                   style='Primary.TButton').pack(side='right')
+        ttk.Button(utility_actions, text='Done', command=self.window.destroy,
+                   style='Primary.TButton').pack(side='left', padx=(8, 0))
         self.table.bind('<<TreeviewSelect>>', self.selection_changed)
         self.refresh(); self.window.wait_visibility(); self.window.grab_set(); self.window.focus_set(); self.window.wait_window()
 
@@ -413,8 +425,10 @@ class GrantApp:
         self.running = False; self.saving = False; self.result = None; self.saved = None
         self.source_store = SourceStore(grants.BASE / 'config.json')
         self.config = self.source_store.effective_config()
-        add_brand_header(root, APP_NAME,
-                         'Find, rank and review funding opportunities for regional Australia.')
+        # Keep the primary banner to one strong line. On shorter laptop displays
+        # a subtitle competes with the results table and can be clipped by the
+        # window manager when the requested window height is constrained.
+        add_brand_header(root, APP_NAME, height=72)
         frame = ttk.Frame(root, style='App.TFrame', padding=(20, 16, 20, 18)); frame.pack(fill='both', expand=True)
 
         steps = ttk.Frame(frame, style='Card.TFrame', padding=(16, 11))
@@ -497,7 +511,8 @@ class GrantApp:
                                        font=('Arial', 9, 'bold'))
 
         table_frame = ttk.Frame(results_card, style='Card.TFrame'); table_frame.pack(fill='both', expand=True)
-        self.table = ttk.Treeview(table_frame, columns=('title', 'score', 'priority', 'source', 'status'), show='headings', selectmode='browse')
+        self.table = ttk.Treeview(table_frame, columns=('title', 'score', 'priority', 'source', 'status'),
+                                  show='headings', selectmode='browse', height=6)
         for key, title, width in [('title', 'Grant / program', 300), ('score', 'Score', 70), ('priority', 'Review priority', 150), ('source', 'Source', 150), ('status', 'Availability', 260)]:
             self.table.heading(key, text=title); self.table.column(key, width=width, minwidth=90)
         scroll = ttk.Scrollbar(table_frame, orient='vertical', command=self.table.yview)
