@@ -21,6 +21,7 @@ import ssl
 import sys
 import tempfile
 import textwrap
+import threading
 import time
 from html.parser import HTMLParser
 from urllib.error import HTTPError, URLError
@@ -35,6 +36,7 @@ BASE = Path(__file__).resolve().parent
 USER_AGENT = 'CorriLeeGrantFinder/1.0 (public grant research)'
 MAX_BYTES = 6_000_000
 TIMEOUT = 18
+DEFAULT_WORKERS = 6
 TOPICS = {
     'Child safety / sexual violence': ['child sexual abuse', 'sexual violence', 'incest',
         'child protection', 'child safety', 'child abuse', 'sexual assault'],
@@ -169,9 +171,24 @@ class FetchProblem(Exception):
     pass
 
 
+_SSL_CONTEXT = None
+_SSL_CONTEXT_LOCK = threading.Lock()
+
+
+def shared_ssl_context():
+    """Build certificate state once and safely reuse it across network workers."""
+    global _SSL_CONTEXT
+    if _SSL_CONTEXT is None:
+        with _SSL_CONTEXT_LOCK:
+            if _SSL_CONTEXT is None:
+                _SSL_CONTEXT = ssl.create_default_context()
+    return _SSL_CONTEXT
+
+
 class Client:
     def __init__(self, timeout=TIMEOUT):
         self.timeout = timeout
+        self.ssl_context = shared_ssl_context()
         self.robots = {}
         self.last = {}
         self.robot_notes = set()
@@ -181,7 +198,7 @@ class Client:
             try:
                 request = Request(url, headers={'User-Agent': USER_AGENT,
                                   'Accept': 'text/html,application/pdf,text/plain;q=0.8'})
-                with urlopen(request, timeout=self.timeout, context=ssl.create_default_context()) as r:
+                with urlopen(request, timeout=self.timeout, context=self.ssl_context) as r:
                     data = r.read(max_bytes + 1)
                     if len(data) > max_bytes:
                         raise FetchProblem('Response too large; open manually.')
@@ -832,7 +849,8 @@ def main(argv=None):
     parser.add_argument('--output', type=Path, help='New .xlsx or .csv filename; existing files are never overwritten.')
     parser.add_argument('--max-pages', type=int, default=12, help='Maximum pages attempted per source (default 12).')
     parser.add_argument('--depth', type=int, default=2, help='Related-link depth (default 2).')
-    parser.add_argument('--workers', type=int, default=3, help='Sites searched concurrently (default 3).')
+    parser.add_argument('--workers', type=int, default=DEFAULT_WORKERS,
+                        help=f'Sites searched concurrently (default {DEFAULT_WORKERS}).')
     parser.add_argument('--timeout', type=int, default=TIMEOUT, help='Network timeout in seconds.')
     parser.add_argument('--source', help='Search only source names containing this text.')
     parser.add_argument('--use-tavily', action='store_true', help='Optional indexed discovery; requires TAVILY_API_KEY. May use paid credits.')

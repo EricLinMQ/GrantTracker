@@ -36,6 +36,24 @@ class DesktopTests(unittest.TestCase):
         self.assertEqual(done[1], [record]); self.assertEqual(len(done[2]), 2)
         self.assertEqual(done[2][1][1], 'Manual check needed')
 
+    def test_search_uses_available_source_concurrency(self):
+        real_executor = app.concurrent.futures.ThreadPoolExecutor
+        observed = []
+
+        class RecordingExecutor(real_executor):
+            def __init__(self, max_workers, *args, **kwargs):
+                observed.append(max_workers)
+                super().__init__(max_workers=max_workers, *args, **kwargs)
+
+        sources = [dict(self.config['sources'][0], name=f'Source {i}') for i in range(10)]
+        config = {'profile': {}, 'sources': sources}
+        status = lambda source: ([], [source['name'], 'Partial', 1, 1, 0, 0, '',
+                                      source['urls'][0], dt.date.today()], [])
+        with patch.object(app.concurrent.futures, 'ThreadPoolExecutor', RecordingExecutor), \
+             patch.object(g, 'crawl_source', side_effect=lambda source, *_args, **_kwargs: status(source)):
+            app.search(config, queue.Queue(), threading.Event())
+        self.assertEqual(observed, [g.DEFAULT_WORKERS])
+
     def test_closed_round_cannot_enter_excel_shortlist(self):
         today = dt.date(2026,9,25); source = self.config['sources'][0]
         text = 'Closed\nAudience Development Program\nApplication closed\nRegional public screenings. Eligible organisations may apply.\nApplications close: Thursday 16 July 2026, 2pm (AEST)'

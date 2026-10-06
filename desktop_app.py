@@ -394,7 +394,11 @@ def search(config, events, stop):
         events.put(('source', source['name']))
         return grants.crawl_source(source, config['profile'], 12, 2, 12, today, stop_event=stop)
     try:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
+        # Site crawls are network-bound and independently rate-limited. Running
+        # six sources at once cuts idle wait time without increasing the request
+        # rate within any individual source.
+        workers = max(1, min(grants.DEFAULT_WORKERS, len(sources)))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
             pending = {pool.submit(run, s): s for s in sources}
             for future in concurrent.futures.as_completed(pending):
                 source = pending[future]

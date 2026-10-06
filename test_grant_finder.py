@@ -121,6 +121,20 @@ class ExtractionTests(unittest.TestCase):
 
 
 class CrawlTests(unittest.TestCase):
+    def test_network_clients_reuse_one_ssl_context(self):
+        previous = g._SSL_CONTEXT
+        g._SSL_CONTEXT = None
+        context = object()
+        try:
+            with patch.object(g.ssl, 'create_default_context', return_value=context) as create:
+                first = g.Client(2)
+                second = g.Client(2)
+            self.assertIs(first.ssl_context, context)
+            self.assertIs(second.ssl_context, context)
+            create.assert_called_once_with()
+        finally:
+            g._SSL_CONTEXT = previous
+
     @patch.object(g.Client, 'fetch', side_effect=g.FetchProblem('HTTP 403; open manually.'))
     def test_failure_is_logged_not_success(self, fetch):
         records, coverage, logs = g.crawl_source(SOURCE, PROFILE, 2, 1, 2, TODAY)
