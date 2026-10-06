@@ -238,7 +238,7 @@ class SourceManager:
     def __init__(self, parent, store, changed):
         self.store = store; self.changed = changed
         self.window = tk.Toplevel(parent); self.window.title('Manage websites')
-        self.window.geometry('1080x700'); self.window.minsize(820, 560)
+        self.window.geometry('1280x820'); self.window.minsize(820, 560)
         set_window_background(self.window)
         self.window.transient(parent)
         add_brand_header(self.window, 'Manage websites', height=72)
@@ -419,7 +419,7 @@ def search(config, events, stop):
 class GrantApp:
     def __init__(self, root):
         self.root = root
-        root.title(APP_NAME); root.geometry('1180x820'); root.minsize(900, 650)
+        root.title(APP_NAME); root.geometry('1400x900'); root.minsize(900, 650)
         configure_styles(root)
         self.events = queue.Queue(); self.stop = threading.Event()
         self.running = False; self.saving = False; self.result = None; self.saved = None
